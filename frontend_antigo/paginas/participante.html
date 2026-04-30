@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acesso do Participante</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho">
+      <h1>Acesso do Participante</h1>
+      <p>Crie sua conta ou entre para participar dos campeonatos.</p>
+      <a href="./campeonatos-publicos.html" class="link-voltar">← Voltar para campeonatos públicos</a>
+    </header>
+
+    <section class="card">
+      <div class="abas-auth">
+        <button id="aba-login-participante" class="botao aba-ativa" type="button">Login</button>
+        <button id="aba-cadastro-participante" class="botao secundario" type="button">Cadastro</button>
+      </div>
+
+      <div id="mensagem-participante" class="mensagem"></div>
+
+      <form id="form-login-participante" class="formulario-auth">
+        <h2>Entrar</h2>
+
+        <div class="grupo-formulario">
+          <label for="login-participante-email">E-mail</label>
+          <input
+            type="email"
+            id="login-participante-email"
+            name="email"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="login-participante-senha">Senha</label>
+          <input
+            type="password"
+            id="login-participante-senha"
+            name="senha"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="botao">Entrar</button>
+      </form>
+
+      <form id="form-cadastro-participante" class="formulario-auth oculto">
+        <h2>Criar conta</h2>
+
+        <div class="grupo-formulario">
+          <label for="cadastro-participante-nome">Nome</label>
+          <input
+            type="text"
+            id="cadastro-participante-nome"
+            name="nome"
+            autocomplete="name"
+            required
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="cadastro-participante-email">E-mail</label>
+          <input
+            type="email"
+            id="cadastro-participante-email"
+            name="email"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="cadastro-participante-contato">Contato</label>
+          <input
+            type="tel"
+            id="cadastro-participante-contato"
+            name="contato"
+            placeholder="(83) 99999-9999"
+            maxlength="15"
+            inputmode="numeric"
+            autocomplete="tel"
+            required
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="cadastro-participante-data-nascimento">Data de nascimento</label>
+          <input
+            type="date"
+            id="cadastro-participante-data-nascimento"
+            name="dataNascimento"
+            required
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="cadastro-participante-sexo">Sexo</label>
+          <select id="cadastro-participante-sexo" name="sexo" required>
+            <option value="">Selecione</option>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMININO">Feminino</option>
+          </select>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="cadastro-participante-senha">Senha</label>
+          <input
+            type="password"
+            id="cadastro-participante-senha"
+            name="senha"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="botao">Cadastrar</button>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="../js/participante.js"></script>
+</body>
+</html>

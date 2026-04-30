@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campeonato Público</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Detalhes do Campeonato</h1>
+        <p>Veja equipes, jogadores, jogos e resultados do campeonato.</p>
+        <a href="./campeonatos-publicos.html" class="link-voltar">
+          ← Voltar para campeonatos públicos
+        </a>
+      </div>
+
+      <div class="acoes-usuario">
+        <a id="link-meu-perfil" href="./perfil-participante.html" class="botao oculto">
+          Meu perfil
+        </a>
+
+        <a id="link-participante" href="./participante.html" class="botao secundario">
+          Entrar / cadastrar
+        </a>
+
+        <button id="botao-logout-participante" class="botao secundario oculto" type="button">
+          Sair
+        </button>
+      </div>
+    </header>
+
+    <div id="participante-logado-box" class="usuario-logado-box oculto"></div>
+
+    <section class="card">
+      <h2>Resumo do campeonato</h2>
+      <p id="mensagem-campeonato-publico" class="mensagem"></p>
+      <div id="dados-campeonato-publico"></div>
+    </section>
+
+    <section class="card">
+      <h2>Equipes</h2>
+      <p class="info-auxiliar">
+        Equipes já formadas e inscritas no campeonato.
+      </p>
+
+      <div id="lista-participantes-publico">
+        <p>Carregando equipes...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Jogadores</h2>
+      <p class="info-auxiliar">
+        Jogadores inscritos individualmente, aguardando formação de equipe pela organização.
+      </p>
+
+      <div id="lista-jogadores-individuais-publico">
+        <p>Carregando jogadores...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Chave do campeonato</h2>
+      <div id="chave-campeonato-publico">
+        <p>Carregando chave...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Jogos</h2>
+      <div id="lista-jogos-publico">
+        <p>Carregando jogos...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Pódio</h2>
+      <div id="podio-publico">
+        <p>Pódio ainda não definido.</p>
+      </div>
+    </section>
+
+    <footer class="rodape-publico">
+      <a href="./login.html" class="link-admin-discreto">Área administrativa</a>
+    </footer>
+  </main>
+
+  <script type="module" src="../js/campeonato-publico.js"></script>
+</body>
+</html>

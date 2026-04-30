@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Administrativo</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho">
+      <h1>Acesso Administrativo</h1>
+      <p>Entre com seu usuário de administrador para gerenciar os campeonatos da plataforma.</p>
+      <a href="./campeonatos-publicos.html" class="link-voltar">← Ir para campeonatos públicos</a>
+    </header>
+
+    <section class="card">
+      <div class="abas-auth">
+        <button id="aba-login" class="botao aba-ativa" type="button">Login</button>
+      </div>
+
+      <form id="form-login" class="formulario-auth">
+        <h2>Entrar</h2>
+
+        <div class="grupo-formulario">
+          <label for="login-admin-usuario">Usuário</label>
+          <input
+            type="text"
+            id="login-admin-usuario"
+            name="login"
+            autocomplete="username"
+            required
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="login-senha">Senha</label>
+          <input
+            type="password"
+            id="login-senha"
+            name="senha"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="botao">Entrar</button>
+      </form>
+
+      <form id="form-cadastro" class="formulario-auth oculto" style="display: none;">
+        <h2>Cadastro desabilitado</h2>
+      </form>
+
+      <p id="mensagem-auth" class="mensagem"></p>
+    </section>
+  </main>
+
+  <script type="module" src="../js/login.js"></script>
+</body>
+</html>

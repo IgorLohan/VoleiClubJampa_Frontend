@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfil do Participante</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Meu Perfil</h1>
+        <p>Veja seus dados, equipes e histórico de participação.</p>
+        <a href="./campeonatos-publicos.html" class="link-voltar">← Voltar para campeonatos públicos</a>
+      </div>
+
+      <div class="acoes-usuario">
+        <a href="./minhas-inscricoes.html" class="botao">Minhas inscrições</a>
+        <button id="botao-logout-participante" class="botao secundario" type="button">
+          Sair
+        </button>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Informações do perfil</h2>
+
+      <div id="mensagem-perfil-participante" class="mensagem"></div>
+
+      <div id="perfil-participante-box">
+        <p>Carregando perfil...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Histórico nos campeonatos</h2>
+      <div id="historico-participante-box">
+        <p>Em breve.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/perfil-participante.js"></script>
+</body>
+</html>

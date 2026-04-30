@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campeonatos Públicos</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Campeonatos Públicos</h1>
+        <p>Veja campeonatos disponíveis, acompanhe resultados e encontre onde participar.</p>
+      </div>
+
+      <div class="acoes-usuario">
+        <a id="link-meu-perfil" href="./perfil-participante.html" class="botao oculto">Meu perfil</a>
+        <a id="link-participante" href="./participante.html" class="botao secundario">Entrar / cadastrar</a>
+        <button id="botao-logout-participante" class="botao secundario oculto" type="button">Sair</button>
+      </div>
+    </header>
+
+    <div id="participante-logado-box" class="usuario-logado-box oculto"></div>
+
+    <section class="card">
+      <div class="barra-filtros-publicos">
+        <div class="grupo-formulario">
+          <label for="busca-publica">Buscar por nome</label>
+          <input type="text" id="busca-publica" placeholder="Digite parte do nome do campeonato" />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="filtro-status-publico">Status</label>
+          <select id="filtro-status-publico">
+            <option value="TODOS">Todos</option>
+            <option value="INSCRICOES_ABERTAS">Inscrições abertas</option>
+            <option value="AGUARDANDO_CHAVEAMENTO">Aguardando chaveamento</option>
+            <option value="EM_ANDAMENTO">Em andamento</option>
+            <option value="FINALIZADO">Finalizado</option>
+          </select>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="filtro-categoria-publico">Categoria</label>
+          <select id="filtro-categoria-publico">
+            <option value="TODAS">Todas</option>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMININO">Feminino</option>
+            <option value="MISTA">Mista</option>
+          </select>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="filtro-tipo-publico">Tipo</label>
+          <select id="filtro-tipo-publico">
+            <option value="TODOS">Todos</option>
+            <option value="DUPLA">Dupla</option>
+            <option value="TIME">Quarteto</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="lista-campeonatos-publicos" class="lista-campeonatos">
+        <p>Carregando campeonatos...</p>
+      </div>
+    </section>
+
+    <footer class="rodape-publico">
+      <a href="./login.html" class="link-admin-discreto">Área administrativa</a>
+    </footer>
+  </main>
+
+  <script type="module" src="../js/campeonatos-publicos.js"></script>
+</body>
+</html>

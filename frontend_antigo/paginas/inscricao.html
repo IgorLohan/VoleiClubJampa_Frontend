@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscrição no Campeonato</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Inscrição no Campeonato</h1>
+        <p>Escolha uma equipe já criada ou crie uma nova equipe para este campeonato.</p>
+        <a href="./campeonatos-publicos.html" class="link-voltar">← Voltar para campeonatos públicos</a>
+      </div>
+
+      <div class="acoes-usuario">
+        <a href="./perfil-participante.html" class="botao">Meu perfil</a>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Informações do campeonato</h2>
+      <div id="dados-campeonato-publico">
+        <p>Carregando informações...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Formulário de inscrição</h2>
+
+      <div id="mensagem-inscricao" class="mensagem"></div>
+
+      <form id="form-inscricao" class="formulario" autocomplete="off">
+        <p class="info-auxiliar" style="grid-column: 1 / -1;">
+          Carregando opções de inscrição...
+        </p>
+      </form>
+
+      <div id="jogadores-container" class="bloco-jogadores"></div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/inscricao.js"></script>
+</body>
+</html>

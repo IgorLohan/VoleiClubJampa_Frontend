@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campeonatos de Vôlei</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Sistema de Campeonato de Vôlei</h1>
+        <p>Crie campeonatos e gerencie inscrições, jogos e pódio.</p>
+        <a href="./campeonatos-publicos.html" class="link-voltar">Ver campeonatos públicos</a>
+      </div>
+
+      <div class="acoes-usuario">
+        <a href="./login.html" id="link-login" class="botao secundario">Ir para login</a>
+        <button id="botao-logout" class="botao secundario" type="button">Sair</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div id="usuario-logado-box" class="usuario-logado-box"></div>
+
+      <h2>Criar campeonato</h2>
+
+      <form id="form-campeonato" class="formulario">
+        <div class="grupo-formulario">
+          <label for="nome">Nome do campeonato</label>
+          <input type="text" id="nome" name="nome" required />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="data">Data</label>
+          <input type="date" id="data" name="data" />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="local">Local</label>
+          <input type="text" id="local" name="local" />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="tipoParticipante">Tipo de participante</label>
+          <select id="tipoParticipante" name="tipoParticipante" required>
+            <option value="DUPLA">Dupla</option>
+            <option value="TIME">Quarteto</option>
+          </select>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="categoria">Categoria</label>
+          <select id="categoria" name="categoria" required>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMININO">Feminino</option>
+            <option value="MISTA">Mista</option>
+          </select>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="modoInscricao">Forma de inscrição</label>
+          <select id="modoInscricao" name="modoInscricao" required>
+            <option value="POR_EQUIPE">Por equipe</option>
+            <option value="INDIVIDUAL">Individual</option>
+          </select>
+          <small class="texto-ajuda">
+            Por equipe: o participante inscreve uma equipe pronta. Individual: cada pessoa se inscreve sozinha e o administrador forma as equipes depois.
+          </small>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="formato">Formato</label>
+          <select id="formato" name="formato" required>
+            <option value="MATA_MATA">Mata-mata</option>
+            <option value="GRUPOS_3X4_REPESCAGEM">Fase de grupos + mata-mata</option>
+            <option value="DUPLA_ELIMINACAO">Upper/Lower (em breve)</option>
+            <option value="TODOS_CONTRA_TODOS">Todos contra todos (em breve)</option>
+          </select>
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="quantidadeMaxima">Quantidade máxima</label>
+          <input
+            type="number"
+            id="quantidadeMaxima"
+            name="quantidadeMaxima"
+            min="2"
+            placeholder="Ex: 8 ou 12"
+          />
+          <small class="texto-ajuda">
+            No formato com fase de grupos, use 8 ou 12 participantes/equipes.
+          </small>
+        </div>
+
+        <button type="submit" class="botao botao-criar-campeonato">Criar campeonato</button>
+      </form>
+
+      <p id="mensagem" class="mensagem"></p>
+    </section>
+
+    <section class="card">
+      <div class="titulo-secao">
+        <h2>Campeonatos cadastrados</h2>
+        <button id="botao-atualizar" class="botao secundario">Atualizar lista</button>
+      </div>
+
+      <div class="barra-filtros">
+        <div class="grupo-formulario">
+          <label for="busca-campeonato">Buscar por nome</label>
+          <input
+            type="text"
+            id="busca-campeonato"
+            placeholder="Digite parte do nome do campeonato"
+          />
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="filtro-status">Filtrar por status</label>
+          <select id="filtro-status">
+            <option value="TODOS">Todos</option>
+            <option value="INSCRICOES_ABERTAS">Inscrições abertas</option>
+            <option value="AGUARDANDO_CHAVEAMENTO">Aguardando chaveamento</option>
+            <option value="EM_ANDAMENTO">Em andamento</option>
+            <option value="FINALIZADO">Finalizado</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="lista-campeonatos" class="lista-campeonatos">
+        <p>Nenhum campeonato carregado.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/inicio.js"></script>
+</body>
+</html>

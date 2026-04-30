@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalhes do Campeonato</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Detalhes do Campeonato</h1>
+        <p>Acompanhe equipes, jogadores, jogos, fases e pódio.</p>
+        <a href="./inicio.html" class="link-voltar">← Voltar para início</a>
+      </div>
+
+      <div class="acoes-usuario">
+        <button id="botao-logout" class="botao secundario" type="button">Sair</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div id="usuario-logado-box" class="usuario-logado-box"></div>
+
+      <div class="titulo-secao">
+        <h2>Resumo do campeonato</h2>
+        <div class="acoes-topo">
+          <button id="botao-copiar-link" class="botao botao-copiar" type="button">
+            Copiar link da inscrição
+          </button>
+
+          <button id="botao-encerrar" class="botao secundario" type="button">
+            Encerrar inscrições
+          </button>
+
+          <button id="botao-reabrir" class="botao secundario" type="button">
+            Reabrir inscrições
+          </button>
+
+          <button id="botao-chaveamento" class="botao" type="button">
+            Gerar fases
+          </button>
+
+          <button id="botao-excluir-campeonato" class="botao botao-excluir-campeonato" type="button">
+            Excluir campeonato
+          </button>
+        </div>
+      </div>
+
+      <p id="mensagem-campeonato" class="mensagem"></p>
+      <div id="dados-campeonato"></div>
+    </section>
+
+    <section class="card">
+      <h2>Equipes</h2>
+      <p class="info-auxiliar">
+        Equipes já formadas e inscritas no campeonato.
+      </p>
+
+      <div id="lista-participantes">
+        <p>Carregando equipes...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Jogadores</h2>
+      <p class="info-auxiliar">
+        Jogadores inscritos individualmente, aguardando formação de equipe pela organização.
+      </p>
+
+      <div id="lista-jogadores-individuais">
+        <p>Carregando jogadores...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Fases do campeonato</h2>
+      <div id="chave-campeonato">
+        <p>Carregando fases...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Jogos</h2>
+      <div id="lista-jogos">
+        <p>Carregando jogos...</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Pódio</h2>
+      <div id="podio">
+        <p>Pódio ainda não definido.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/campeonato.js"></script>
+</body>
+</html>

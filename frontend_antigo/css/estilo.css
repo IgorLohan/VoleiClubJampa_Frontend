@@ -1,0 +1,817 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.container {
+  width: min(1100px, 90%);
+  margin: 40px auto;
+}
+
+.cabecalho {
+  margin-bottom: 24px;
+}
+
+.cabecalho h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.cabecalho p {
+  color: #4b5563;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.card h2 {
+  margin-bottom: 20px;
+}
+
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.formulario-auth {
+  display: grid;
+  gap: 16px;
+}
+
+.grupo-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grupo-formulario label {
+  font-weight: 600;
+}
+
+.grupo-formulario input,
+.grupo-formulario select {
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.botao {
+  grid-column: 1 / -1;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.botao:hover {
+  background: #1d4ed8;
+}
+
+.botao.secundario {
+  background: #6b7280;
+}
+
+.botao.secundario:hover {
+  background: #4b5563;
+}
+
+.botao,
+.botao:link,
+.botao:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  grid-column: auto;
+}
+
+.botao.secundario,
+.botao.secundario:link,
+.botao.secundario:visited {
+  text-decoration: none;
+  color: white;
+}
+
+.botao:not(.secundario),
+.botao:not(.secundario):link,
+.botao:not(.secundario):visited {
+  color: white;
+}
+
+.botao-pequeno {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.botao-pequeno:hover {
+  background: #1d4ed8;
+}
+
+.botao-pequeno.secundario {
+  background: #6b7280;
+}
+
+.botao-pequeno.secundario:hover {
+  background: #4b5563;
+}
+
+.botao:disabled,
+.botao-pequeno:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mensagem {
+  margin-top: 16px;
+  font-weight: 600;
+}
+
+.mensagem-jogo {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.mensagem-edicao-inscricao {
+  margin-top: 8px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.titulo-secao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.lista-campeonatos {
+  display: grid;
+  gap: 16px;
+}
+
+.item-campeonato {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.item-campeonato h3 {
+  margin-bottom: 10px;
+}
+
+.item-campeonato p {
+  margin-bottom: 6px;
+}
+
+.item-campeonato a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #2563eb;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.item-campeonato a:hover {
+  text-decoration: underline;
+}
+
+.link-voltar {
+  display: inline-block;
+  margin-top: 8px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.link-voltar:hover {
+  text-decoration: underline;
+}
+
+.acoes-topo {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.acoes-card {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.acoes-usuario {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.status-inscricoes {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-aguardando {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-andamento {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-finalizado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-lista {
+  display: inline-block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.bloco-informacoes p {
+  margin-bottom: 8px;
+}
+
+.info-auxiliar {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-top: 8px;
+}
+
+.lista-simples {
+  display: grid;
+  gap: 14px;
+}
+
+.item-lista {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.item-lista h3 {
+  margin-bottom: 10px;
+}
+
+.item-lista ul {
+  margin-left: 18px;
+  margin-top: 8px;
+}
+
+.podio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card-podio {
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.card-podio h3 {
+  margin-bottom: 8px;
+}
+
+.bloco-jogadores {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 16px;
+}
+
+.card-jogador {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.card-jogador h3 {
+  margin-bottom: 12px;
+}
+
+.formulario-placar {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.grade-sets {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.linha-set {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.linha-set strong {
+  padding-bottom: 10px;
+}
+
+.linha-set input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.confronto-visual {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.equipe-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+  text-align: center;
+  font-weight: 600;
+}
+
+.vs-box {
+  font-weight: bold;
+  color: #6b7280;
+}
+
+.botao-copiar {
+  background: #0f766e;
+}
+
+.botao-copiar:hover {
+  background: #0d5f59;
+}
+
+.botao-excluir {
+  margin-top: 12px;
+  background: #dc2626;
+}
+
+.botao-excluir:hover {
+  background: #b91c1c;
+}
+
+.botao-excluir-campeonato {
+  background: #991b1b;
+}
+
+.botao-excluir-campeonato:hover {
+  background: #7f1d1d;
+}
+
+.barra-filtros {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.barra-filtros-publicos {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.abas-auth {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.usuario-logado-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.topo-inicio {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* NOVA CHAVE HORIZONTAL */
+.chave-horizontal-wrapper {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.chave-horizontal {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  min-width: max-content;
+}
+
+.coluna-chave {
+  position: relative;
+  width: 220px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coluna-chave h3 {
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  border: 1px solid #dbeafe;
+}
+
+.cards-coluna-chave {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coluna-chave.tem-seta::after {
+  content: "";
+  position: absolute;
+  top: 52%;
+  right: -18px;
+  width: 18px;
+  height: 2px;
+  background: #cbd5e1;
+}
+
+.coluna-chave.tem-seta::before {
+  content: "";
+  position: absolute;
+  top: calc(52% - 4px);
+  right: -18px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #cbd5e1;
+  border-right: 2px solid #cbd5e1;
+  transform: rotate(45deg);
+}
+
+.jogo-chave {
+  border: 1px solid #dbe2ea;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.titulo-jogo-chave {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #1f2937;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.jogo-chave .fase-status {
+  font-size: 0.76rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.jogo-chave .linha-equipe {
+  padding: 7px 8px;
+  border-radius: 9px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.jogo-chave .linha-equipe:last-of-type {
+  margin-bottom: 0;
+}
+
+.vencedor-chave {
+  font-weight: 700 !important;
+  color: #166534;
+  background: #dcfce7 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.placar-chave {
+  margin-top: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 9px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.placeholder-chave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 92px;
+  text-align: center;
+  color: #6b7280;
+  background: #ffffff;
+}
+
+.resumo-grupo {
+  background: #ffffff;
+}
+
+.grupo-resumo-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.82rem;
+  color: #374151;
+}
+
+.grupo-classificacao {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.linha-classificacao {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 9px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.posicao-grupo {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.nome-grupo {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.rodape-publico {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.link-admin-discreto {
+  font-size: 0.95rem;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.link-admin-discreto:hover {
+  text-decoration: underline;
+  color: #374151;
+}
+
+.area-edicao-inscricao {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.area-edicao-inscricao h4 {
+  margin-bottom: 12px;
+}
+
+.formulario-edicao-inscricao {
+  display: grid;
+  gap: 14px;
+}
+
+.bloco-jogadores-edicao {
+  display: grid;
+  gap: 12px;
+}
+
+.formulario-edicao-inscricao .card-jogador h4 {
+  margin-bottom: 10px;
+}
+
+.area-edicao-campeonato {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.area-edicao-campeonato h4 {
+  margin-bottom: 12px;
+}
+
+.formulario-edicao-campeonato {
+  display: grid;
+  gap: 14px;
+}
+
+.perfil-participante-card {
+  display: grid;
+  gap: 16px;
+}
+
+.perfil-participante-topo {
+  display: flex;
+  justify-content: center;
+}
+
+.foto-perfil-participante,
+.foto-perfil-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.foto-perfil-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e9e9e9;
+  color: #666;
+  font-weight: 600;
+  border: 2px dashed #c8c8c8;
+}
+
+.foto-perfil-clicavel {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  cursor: pointer;
+}
+
+.foto-perfil-clicavel .foto-perfil-participante,
+.foto-perfil-clicavel .foto-perfil-placeholder {
+  transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.foto-perfil-clicavel:hover .foto-perfil-participante,
+.foto-perfil-clicavel:hover .foto-perfil-placeholder {
+  transform: scale(1.03);
+  opacity: 0.92;
+}
+
+.texto-acao-foto-inline {
+  font-size: 0.92rem;
+  color: #4b5563;
+  text-align: center;
+}
+
+.oculto {
+  display: none !important;
+}
+
+.campo-bloqueado {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.botao-criar-campeonato {
+  align-self: end;
+  justify-self: end;
+  width: auto;
+  min-width: 180px;
+  height: 48px;
+  padding: 0 24px;
+}
+
+@media (max-width: 900px) {
+  .barra-filtros-publicos {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .coluna-chave {
+    width: 210px;
+    min-width: 210px;
+  }
+}
+
+@media (max-width: 700px) {
+  .formulario {
+    grid-template-columns: 1fr;
+  }
+
+  .titulo-secao {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .podio-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .barra-filtros-publicos {
+    grid-template-columns: 1fr;
+  }
+
+  .topo-inicio {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .barra-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .confronto-visual {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .linha-set {
+    grid-template-columns: 1fr;
+  }
+
+  .linha-set strong {
+    padding-bottom: 0;
+  }
+
+  .chave-horizontal {
+    gap: 16px;
+  }
+
+  .coluna-chave {
+    width: 200px;
+    min-width: 200px;
+  }
+}

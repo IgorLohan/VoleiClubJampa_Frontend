@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convite de Equipe</title>
+  <link rel="stylesheet" href="../css/estilo.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho topo-inicio">
+      <div>
+        <h1>Convite de Equipe</h1>
+        <p>Veja os dados da equipe e aceite o convite para participar.</p>
+        <a href="./campeonatos-publicos.html" class="link-voltar">← Voltar para campeonatos públicos</a>
+      </div>
+
+      <div class="acoes-usuario">
+        <a href="./perfil-participante.html" id="link-meu-perfil" class="botao">Meu perfil</a>
+        <a href="./participante.html" id="link-login-cadastro" class="botao secundario">Login/Cadastro</a>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Dados do convite</h2>
+
+      <div id="convite-equipe-box">
+        <p>Carregando convite...</p>
+      </div>
+
+      <p id="mensagem-convite-equipe" class="mensagem"></p>
+    </section>
+  </main>
+
+  <script type="module" src="../js/convite-equipe.js"></script>
+</body>
+</html>
