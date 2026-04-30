@@ -2030,6 +2030,71 @@ body {
   display: block;
 }
 
+.inscricao-pix-copy {
+  margin: 0 0 14px;
+}
+
+.inscricao-pix-copy-label {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  color: rgba(11, 18, 32, 0.88);
+}
+
+.inscricao-pix-copy-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.inscricao-pix-copy-input {
+  flex: 1 1 160px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  word-break: break-all;
+  color: rgba(11, 18, 32, 0.92);
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 10px;
+}
+
+.inscricao-pix-copy-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.inscricao-pix-copy-btn:hover {
+  filter: brightness(1.05);
+}
+
+.inscricao-pix-copy-btn:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.inscricao-pix-copy-hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(11, 18, 32, 0.55);
+}
+
 .inscricao-form-fields {
   grid-template-columns: 1fr;
   gap: 18px;

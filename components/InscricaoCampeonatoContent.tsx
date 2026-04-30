@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Check, Copy } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   buscarCampeonatoPorId,
@@ -23,6 +24,26 @@ type ParticipanteLogado = {
 } | null;
 
 const VALOR_INSCRICAO_EXIBICAO = "R$ 30,00";
+
+/** Código PIX (copia e cola) — mesmo destino do QR Code. */
+const PIX_COPIA_E_COLA =
+  "00020126580014br.gov.bcb.pix0136972515f6-ddb7-4f89-837c-dd3e20c7feb5520400005303986540530.005802BR592551.593.263 KELSON ROCHA C6011JOAO PESSOA62070503***6304EDAD";
+
+async function copiarTextoClipboard(texto: string) {
+  try {
+    await navigator.clipboard.writeText(texto);
+  } catch {
+    const el = document.createElement("textarea");
+    el.value = texto;
+    el.setAttribute("readonly", "true");
+    el.style.position = "absolute";
+    el.style.left = "-9999px";
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
+  }
+}
 
 /** Valores aceitos pelo backend (enum TamanhoCamisa). */
 const TAMANHOS_CAMISA = [
@@ -174,6 +195,7 @@ export default function InscricaoCampeonatoContent({
   const [modalRegrasAberto, setModalRegrasAberto] = useState(false);
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const [jaInscritoNesteCampeonato, setJaInscritoNesteCampeonato] = useState(false);
+  const [pixCopiado, setPixCopiado] = useState(false);
 
   useEffect(() => {
     if (variant !== "page") return;
@@ -445,7 +467,7 @@ export default function InscricaoCampeonatoContent({
                 </p>
                 <div className="inscricao-qr-frame">
                   <Image
-                    src="/qrcode.png"
+                    src="/qrcode.jpeg"
                     alt="QR Code para pagamento via PIX"
                     width={200}
                     height={200}
@@ -453,8 +475,44 @@ export default function InscricaoCampeonatoContent({
                     priority
                   />
                 </div>
+                <div className="inscricao-pix-copy">
+                  <p className="inscricao-pix-copy-label">
+                    <strong>PIX copia e cola:</strong>
+                  </p>
+                  <div className="inscricao-pix-copy-row">
+                    <input
+                      id={`${uid}-pix-copia-cola`}
+                      className="inscricao-pix-copy-input"
+                      readOnly
+                      value={PIX_COPIA_E_COLA}
+                      aria-label="Código PIX para copiar"
+                      onFocus={(e) => e.target.select()}
+                    />
+                    <button
+                      type="button"
+                      className="inscricao-pix-copy-btn"
+                      onClick={async () => {
+                        await copiarTextoClipboard(PIX_COPIA_E_COLA);
+                        setPixCopiado(true);
+                        window.setTimeout(() => setPixCopiado(false), 2200);
+                      }}
+                    >
+                      {pixCopiado ? (
+                        <>
+                          <Check size={18} aria-hidden />
+                          Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={18} aria-hidden />
+                          Copiar
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
                 <p className="inscricao-muted inscricao-muted--tight">
-                  Após pagar, envie ao lado a imagem do comprovante.
+                  Após pagar, envie a imagem do comprovante.
                 </p>
               </div>
 
