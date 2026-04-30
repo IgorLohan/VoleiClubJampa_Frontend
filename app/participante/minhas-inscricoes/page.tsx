@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { listarMinhasInscricoes } from "@/lib/api";
+import { API_BASE, listarMinhasInscricoes } from "@/lib/api";
 import {
   chavesSessao,
   getJSONStorage,
@@ -25,9 +25,6 @@ import {
 } from "@/lib/sessao";
 
 type ParticipanteLogado = { nome: string; email: string } | null;
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE?.trim() || "http://localhost:3333";
 
 function formatarData(data: string | null | undefined) {
   if (!data) return "Não informada";

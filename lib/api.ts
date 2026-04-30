@@ -5,8 +5,7 @@ type FazerRequisicaoOpcoes = Omit<RequestInit, "headers"> & {
   usarTokenAdmin?: boolean;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE?.trim() || "http://localhost:3333";
+export const API_BASE = "http://voleiclubjampabackend-production.up.railway.app";
 
 function obterTokenAdmin(): string | null {
   if (typeof window === "undefined") return null;
