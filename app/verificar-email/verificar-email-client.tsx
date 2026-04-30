@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Mail } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import PageLoader from "@/components/PageLoader";
 import { reenviarVerificacao, verificarEmail } from "@/lib/api";
 
 type TipoMensagem = "info" | "sucesso" | "erro";
@@ -130,9 +131,13 @@ export default function VerificarEmailClient() {
             <p>Confirme seu e-mail para ativar sua conta no sistema.</p>
           </div>
 
-          <div className={classeBanner} role={tipo === "erro" ? "alert" : "status"}>
-            {mensagem}
-          </div>
+          {tipo === "info" && mensagem === "Verificando seu e-mail..." ? (
+            <PageLoader label="Verificando e-mail" variant="section" />
+          ) : (
+            <div className={classeBanner} role={tipo === "erro" ? "alert" : "status"}>
+              {mensagem}
+            </div>
+          )}
 
           {detalhe ? <p className="auth-message">{detalhe}</p> : null}
 

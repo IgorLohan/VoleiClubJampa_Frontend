@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Eye, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import InscricaoCampeonatoContent from "@/components/InscricaoCampeonatoContent";
+import PageLoader from "@/components/PageLoader";
 import {
   buscarResumoCampeonatoPublico,
   listarCampeonatosPublicos,
@@ -283,7 +284,11 @@ export default function CampeonatosPublicosPage() {
         </div>
 
         <div className="campeonatos-table-wrap">
-          {mensagem ? <p className="campeonatos-msg">{mensagem}</p> : null}
+          {mensagem === "Carregando campeonatos..." ? (
+            <PageLoader label="Carregando campeonatos" variant="section" />
+          ) : mensagem ? (
+            <p className="campeonatos-msg">{mensagem}</p>
+          ) : null}
 
           <table className="campeonatos-table">
             <thead>
@@ -455,7 +460,7 @@ export default function CampeonatosPublicosPage() {
                 <section className="campeonatos-modal-section">
                   <h2 className="campeonatos-modal-h2">Resumo do campeonato</h2>
                   {resumoAberto.carregando ? (
-                    <p className="campeonatos-msg">Carregando campeonato...</p>
+                    <PageLoader label="Carregando campeonato" variant="inline" />
                   ) : resumoAberto.erro ? (
                     <p className="campeonatos-msg">{resumoAberto.erro}</p>
                   ) : resumoAberto.dados ? (
@@ -544,9 +549,11 @@ export default function CampeonatosPublicosPage() {
               {abaDetalhes === "PARTICIPANTES" ? (
                 <section className="campeonatos-modal-section">
                   <h2 className="campeonatos-modal-h2">Participantes</h2>
-                  {!resumoAberto.dados ? (
-                    <p className="campeonatos-msg">Carregando participantes...</p>
-                  ) : !resumoAberto.dados.participantes?.length ? (
+                  {resumoAberto.carregando ? (
+                    <PageLoader label="Carregando participantes" variant="inline" />
+                  ) : resumoAberto.erro ? (
+                    <p className="campeonatos-msg">{resumoAberto.erro}</p>
+                  ) : !resumoAberto.dados?.participantes?.length ? (
                     <p className="campeonatos-msg">Nenhum participante inscrito ainda.</p>
                   ) : (
                     <div className="campeonatos-modal-list">
@@ -575,8 +582,12 @@ export default function CampeonatosPublicosPage() {
               {abaDetalhes === "CHAVE" ? (
                 <section className="campeonatos-modal-section">
                   <h2 className="campeonatos-modal-h2">Chave do campeonato</h2>
-                  {!resumoAberto.dados ? (
-                    <p className="campeonatos-msg">Carregando chave...</p>
+                  {resumoAberto.carregando ? (
+                    <PageLoader label="Carregando chave" variant="inline" />
+                  ) : resumoAberto.erro ? (
+                    <p className="campeonatos-msg">{resumoAberto.erro}</p>
+                  ) : !resumoAberto.dados ? (
+                    <p className="campeonatos-msg">Não foi possível carregar o resumo.</p>
                   ) : (resumoAberto.dados.campeonato?.formato ?? campeonatoAberto.formato) !==
                     "MATA_MATA" ? (
                     <p className="campeonatos-msg">
@@ -636,9 +647,11 @@ export default function CampeonatosPublicosPage() {
               {abaDetalhes === "JOGOS" ? (
                 <section className="campeonatos-modal-section">
                   <h2 className="campeonatos-modal-h2">Jogos</h2>
-                  {!resumoAberto.dados ? (
-                    <p className="campeonatos-msg">Carregando jogos...</p>
-                  ) : !resumoAberto.dados.jogos?.length ? (
+                  {resumoAberto.carregando ? (
+                    <PageLoader label="Carregando jogos" variant="inline" />
+                  ) : resumoAberto.erro ? (
+                    <p className="campeonatos-msg">{resumoAberto.erro}</p>
+                  ) : !resumoAberto.dados?.jogos?.length ? (
                     <p className="campeonatos-msg">Nenhum jogo gerado ainda.</p>
                   ) : (
                     <div className="campeonatos-modal-list">
@@ -687,9 +700,11 @@ export default function CampeonatosPublicosPage() {
               {abaDetalhes === "PODIO" ? (
                 <section className="campeonatos-modal-section">
                   <h2 className="campeonatos-modal-h2">Pódio</h2>
-                  {!resumoAberto.dados ? (
-                    <p className="campeonatos-msg">Carregando pódio...</p>
-                  ) : !resumoAberto.dados.podio ? (
+                  {resumoAberto.carregando ? (
+                    <PageLoader label="Carregando pódio" variant="inline" />
+                  ) : resumoAberto.erro ? (
+                    <p className="campeonatos-msg">{resumoAberto.erro}</p>
+                  ) : !resumoAberto.dados?.podio ? (
                     <p className="campeonatos-msg">Pódio ainda não definido.</p>
                   ) : (
                     <div className="campeonatos-podio-grid">

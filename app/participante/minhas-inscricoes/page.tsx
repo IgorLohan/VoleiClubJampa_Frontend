@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import PageLoader from "@/components/PageLoader";
 import { API_BASE, listarMinhasInscricoes } from "@/lib/api";
 import {
   chavesSessao,
@@ -234,7 +235,11 @@ export default function MinhasInscricoesPage() {
           </div>
         </div>
 
-        {mensagem ? <p className="mensagem minhas-inscricoes-msg">{mensagem}</p> : null}
+        {mensagem === "Carregando inscrições..." ? (
+          <PageLoader label="Carregando inscrições" variant="section" />
+        ) : mensagem ? (
+          <p className="mensagem minhas-inscricoes-msg">{mensagem}</p>
+        ) : null}
 
         {!mensagem && !inscricoesFiltradas.length ? (
           <div className="minhas-inscricoes-empty">

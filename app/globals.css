@@ -4564,3 +4564,217 @@ a.home-sponsors-card--orbit:focus-visible {
   }
 }
 
+/* ——— Loading global (rotas + seções) ——— */
+.page-loader {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 32px 24px;
+  box-sizing: border-box;
+}
+
+.page-loader--fullscreen {
+  min-height: 100dvh;
+  min-height: 100svh;
+  width: 100%;
+  background: radial-gradient(
+      900px 420px at 50% -10%,
+      rgba(243, 146, 0, 0.14),
+      transparent 55%
+    ),
+    radial-gradient(
+      700px 380px at 100% 40%,
+      rgba(228, 70, 49, 0.08),
+      transparent 50%
+    ),
+    linear-gradient(180deg, rgba(32, 54, 103, 0.07) 0%, #f3f4f6 52%);
+}
+
+.page-loader--section {
+  min-height: 200px;
+  width: 100%;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  border: 1px solid rgba(32, 54, 103, 0.1);
+}
+
+.page-loader--inline {
+  min-height: 0;
+  padding: 16px 12px;
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+}
+
+.page-loader--inline .page-loader__glow {
+  display: none;
+}
+
+.page-loader--inline .page-loader__label {
+  font-size: 0.88rem;
+}
+
+.page-loader--inline .page-loader__spinner {
+  width: 40px;
+  height: 40px;
+}
+
+.page-loader--inline .page-loader__ring--a {
+  border-width: 2px;
+}
+
+.page-loader--inline .page-loader__ring--b {
+  inset: 7px;
+  border-width: 2px;
+}
+
+.page-loader--inline .page-loader__dots span {
+  width: 5px;
+  height: 5px;
+}
+
+.page-loader__glow {
+  position: absolute;
+  width: min(280px, 70vw);
+  height: min(280px, 70vw);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(32, 54, 103, 0.12) 0%,
+    rgba(243, 146, 0, 0.06) 42%,
+    transparent 68%
+  );
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-loader__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  gap: 14px;
+}
+
+.page-loader__spinner {
+  position: relative;
+  width: 56px;
+  height: 56px;
+}
+
+.page-loader__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  box-sizing: border-box;
+}
+
+.page-loader__ring--a {
+  border-top-color: var(--brand-orange);
+  border-right-color: rgba(243, 146, 0, 0.35);
+  animation: page-loader-spin 0.95s linear infinite;
+}
+
+.page-loader__ring--b {
+  inset: 9px;
+  border-bottom-color: var(--brand-red);
+  border-left-color: rgba(228, 70, 49, 0.35);
+  animation: page-loader-spin 1.25s linear infinite reverse;
+}
+
+.page-loader__label {
+  margin: 0;
+  font-weight: 900;
+  font-size: 0.98rem;
+  letter-spacing: 0.04em;
+  color: var(--brand-navy);
+  text-align: center;
+  animation: page-loader-fade 1.35s ease-in-out infinite;
+}
+
+.page-loader__dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-loader__dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand-orange), var(--brand-red));
+  opacity: 0.35;
+  animation: page-loader-bounce 1.05s ease-in-out infinite;
+}
+
+.page-loader__dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.page-loader__dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.page-loader__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes page-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes page-loader-fade {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes page-loader-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loader__ring--a,
+  .page-loader__ring--b {
+    animation-duration: 2.4s;
+  }
+
+  .page-loader__label {
+    animation: none;
+    opacity: 0.9;
+  }
+
+  .page-loader__dots span {
+    animation: none;
+    opacity: 0.75;
+  }
+}
+

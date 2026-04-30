@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import PageLoader from "@/components/PageLoader";
 import VerificarEmailClient from "./verificar-email-client";
 
 export default function VerificarEmailPage() {
@@ -8,10 +9,7 @@ export default function VerificarEmailPage() {
         <main className="auth-page">
           <div className="auth-shell">
             <section className="auth-card" aria-label="Verificação de e-mail">
-              <div className="auth-title">
-                <h2>Verificação de e-mail</h2>
-                <p>Carregando...</p>
-              </div>
+              <PageLoader label="Carregando" variant="section" />
             </section>
           </div>
         </main>

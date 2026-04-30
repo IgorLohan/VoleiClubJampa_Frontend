@@ -9,6 +9,7 @@ import {
   criarInscricaoIndividual,
   listarMinhasInscricoes
 } from "@/lib/api";
+import PageLoader from "@/components/PageLoader";
 import {
   chavesSessao,
   getJSONStorage,
@@ -349,7 +350,13 @@ export default function InscricaoCampeonatoContent({
           ) : null}
         </p>
       ) : !campeonato ? (
-        <p className="inscricao-lead">{mensagem || "Carregando..."}</p>
+        mensagem.startsWith("Erro") ? (
+          <p className="inscricao-lead mensagem">{mensagem}</p>
+        ) : !campeonatoId ? (
+          <p className="inscricao-lead">Campeonato não informado.</p>
+        ) : (
+          <PageLoader label="Carregando campeonato" variant="section" />
+        )
       ) : !inscricoesAbertas ? (
         <p className="mensagem">As inscrições deste campeonato estão encerradas.</p>
       ) : !modoIndividual ? (
@@ -588,7 +595,11 @@ export default function InscricaoCampeonatoContent({
       )}
 
       {mostrarFeedbackRodape ? (
-        <p className="mensagem inscricao-feedback">{mensagem}</p>
+        mensagem === "Enviando inscrição..." ? (
+          <PageLoader label="Enviando inscrição" variant="inline" />
+        ) : (
+          <p className="mensagem inscricao-feedback">{mensagem}</p>
+        )
       ) : null}
     </section>
   );

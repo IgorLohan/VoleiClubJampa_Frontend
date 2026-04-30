@@ -17,6 +17,7 @@ import {
   reabrirInscricoes,
   reprovarInscricaoIndividual
 } from "@/lib/api";
+import PageLoader from "@/components/PageLoader";
 import {
   chavesSessao,
   getJSONStorage,
@@ -574,7 +575,11 @@ export default function AdminCampeonatoPage() {
           </button>
         </div>
 
-        <p className="mensagem">{mensagem}</p>
+        {mensagem === "Carregando campeonato..." ? (
+          <PageLoader label="Carregando campeonato" variant="section" />
+        ) : mensagem ? (
+          <p className="mensagem">{mensagem}</p>
+        ) : null}
       </section>
 
       {resumo ? (

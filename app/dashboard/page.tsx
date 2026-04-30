@@ -8,6 +8,7 @@ import {
   setJSONStorage,
 } from "@/lib/sessao";
 import type { PapelUsuario } from "@/components/DashboardToolbar";
+import PageLoader from "@/components/PageLoader";
 import {
   API_BASE,
   atualizarMeuPerfil,
@@ -260,8 +261,8 @@ export default function DashboardPage() {
                 className="admin-dash-select-control"
               >
                 <option value="">
-                  {msgCampeonatos
-                    ? "Carregando..."
+                  {msgCampeonatos === "Carregando campeonatos..."
+                    ? "Aguarde..."
                     : campeonatos.length
                       ? "Escolha..."
                       : "Nenhum campeonato"}
@@ -272,7 +273,9 @@ export default function DashboardPage() {
                   </option>
                 ))}
               </select>
-              {msgCampeonatos ? (
+              {msgCampeonatos === "Carregando campeonatos..." ? (
+                <PageLoader label="Carregando campeonatos" variant="inline" />
+              ) : msgCampeonatos ? (
                 <p className="admin-dash-help">{msgCampeonatos}</p>
               ) : null}
             </div>
@@ -315,7 +318,9 @@ export default function DashboardPage() {
             </article>
           </div>
 
-          {msgResumo ? (
+          {msgResumo === "Carregando dados do campeonato..." ? (
+            <PageLoader label="Carregando dados do campeonato" variant="section" />
+          ) : msgResumo ? (
             <p className="admin-dash-help admin-dash-help--center">{msgResumo}</p>
           ) : null}
 

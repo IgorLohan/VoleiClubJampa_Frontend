@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
+import PageLoader from "@/components/PageLoader";
 import {
   aprovarInscricaoIndividual,
   atualizarInscricaoIndividual,
@@ -200,7 +201,18 @@ function InscricoesAdminPage() {
             </option>
           ))}
         </select>
-        {mensagem ? <p className="admin-dash-help">{mensagem}</p> : null}
+        {mensagem === "Carregando campeonatos..." || mensagem === "Carregando inscrições..." ? (
+          <PageLoader
+            label={
+              mensagem === "Carregando campeonatos..."
+                ? "Carregando campeonatos"
+                : "Carregando inscrições"
+            }
+            variant="section"
+          />
+        ) : mensagem ? (
+          <p className="admin-dash-help">{mensagem}</p>
+        ) : null}
       </section>
 
       {resumo ? (
