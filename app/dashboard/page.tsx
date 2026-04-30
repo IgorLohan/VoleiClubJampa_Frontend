@@ -55,6 +55,24 @@ function formatarDataBR(data: string | null | undefined) {
   return dt.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
+/** Edição de perfil: só Masculino ou Feminino. */
+function sexoEditavelPerfil(sexo: string | null | undefined): string {
+  const s = String(sexo || "").toUpperCase();
+  return s === "MASCULINO" || s === "FEMININO" ? s : "";
+}
+
+function formatarSexoExibicao(sexo: string | null | undefined) {
+  if (!String(sexo || "").trim()) return "—";
+  const map: Record<string, string> = {
+    MASCULINO: "Masculino",
+    FEMININO: "Feminino",
+    OUTRO: "Outro",
+    PREFIRO_NAO_INFORMAR: "Prefiro não informar"
+  };
+  const u = String(sexo).toUpperCase();
+  return map[u] || String(sexo);
+}
+
 function normalizarSessao(): { papel: PapelUsuario | null; usuario: SessaoUsuario } {
   const tokenAdmin = getStorage(chavesSessao.tokenAdmin);
   const tokenParticipante = getStorage(chavesSessao.tokenParticipante);
@@ -88,7 +106,7 @@ export default function DashboardPage() {
     nome: sessao.usuario?.nome || "",
     contato: sessao.usuario?.contato || "",
     dataNascimento: (sessao.usuario?.dataNascimento || "") as string,
-    sexo: (sessao.usuario?.sexo || "") as string,
+    sexo: sexoEditavelPerfil(sessao.usuario?.sexo),
   }));
   const [campeonatos, setCampeonatos] = useState<Array<{ id: number; nome: string }>>(
     []
@@ -126,7 +144,7 @@ export default function DashboardPage() {
             nome: String(usuario.nome || ""),
             contato: String(usuario.contato || ""),
             dataNascimento: String(usuario.dataNascimento || ""),
-            sexo: String(usuario.sexo || ""),
+            sexo: sexoEditavelPerfil(usuario.sexo),
           });
           setJSONStorage(chavesSessao.participanteLogado, usuario);
         }
@@ -382,7 +400,7 @@ export default function DashboardPage() {
                       nome: String(perfil?.nome || ""),
                       contato: String(perfil?.contato || ""),
                       dataNascimento: String(perfil?.dataNascimento || ""),
-                      sexo: String(perfil?.sexo || ""),
+                      sexo: sexoEditavelPerfil(perfil?.sexo),
                     });
                   }}
                 >
@@ -462,7 +480,7 @@ export default function DashboardPage() {
                 </li>
                 <li>
                   <strong>Sexo</strong>
-                  <span>{perfil?.sexo?.trim() || "—"}</span>
+                  <span>{formatarSexoExibicao(perfil?.sexo)}</span>
                 </li>
               </ul>
             ) : (
@@ -589,8 +607,6 @@ export default function DashboardPage() {
                       <option value="">—</option>
                       <option value="MASCULINO">Masculino</option>
                       <option value="FEMININO">Feminino</option>
-                      <option value="OUTRO">Outro</option>
-                      <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
                     </select>
                   </label>
                 </div>
