@@ -9,6 +9,8 @@ export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE?.trim() ||
   "https://voleiclubjampabackend-production.up.railway.app";
 
+// export const API_BASE ="http://localhost:3333";
+
 function obterTokenAdmin(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("tokenAdmin");
@@ -106,6 +108,56 @@ export async function listarMinhasInscricoes(tokenParticipante: string | null) {
       : {},
     usarTokenAdmin: false
   });
+}
+
+export async function buscarMeuPerfil(tokenParticipante: string | null) {
+  return fazerRequisicao("/usuarios/me", {
+    method: "GET",
+    headers: tokenParticipante ? { Authorization: `Bearer ${tokenParticipante}` } : {},
+    usarTokenAdmin: false
+  });
+}
+
+export async function atualizarMeuPerfil(
+  tokenParticipante: string | null,
+  payload: {
+    nome?: string;
+    contato?: string | null;
+    dataNascimento?: string | null;
+    sexo?: string | null;
+  }
+) {
+  return fazerRequisicao("/usuarios/me", {
+    method: "PATCH",
+    headers: tokenParticipante ? { Authorization: `Bearer ${tokenParticipante}` } : {},
+    body: JSON.stringify(payload),
+    usarTokenAdmin: false
+  });
+}
+
+export async function atualizarMinhaFotoPerfil(
+  tokenParticipante: string | null,
+  arquivo: File
+) {
+  if (!arquivo) {
+    throw new Error("Nenhum arquivo selecionado.");
+  }
+
+  const formData = new FormData();
+  formData.append("foto", arquivo);
+
+  const resposta = await fetch(`${API_BASE}/usuarios/me/foto`, {
+    method: "PATCH",
+    headers: tokenParticipante ? { Authorization: `Bearer ${tokenParticipante}` } : {},
+    body: formData
+  });
+
+  const dados = (await resposta.json().catch(() => ({}))) as any;
+  if (!resposta.ok) {
+    throw new Error(dados.erro || dados.detalhe || "Erro no upload da foto.");
+  }
+
+  return dados;
 }
 
 export async function listarCampeonatos() {
