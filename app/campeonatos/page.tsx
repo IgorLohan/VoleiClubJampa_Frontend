@@ -4,7 +4,11 @@ import Link from "next/link";
 import { Eye, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import InscricaoCampeonatoContent from "@/components/InscricaoCampeonatoContent";
-import { buscarResumoCampeonatoPublico, listarCampeonatosPublicos } from "@/lib/api";
+import {
+  buscarResumoCampeonatoPublico,
+  listarCampeonatosPublicos,
+  listarMinhasInscricoes
+} from "@/lib/api";
 import {
   chavesSessao,
   getJSONStorage,
@@ -128,6 +132,39 @@ export default function CampeonatosPublicosPage() {
   const participante = getJSONStorage<ParticipanteLogado>(
     chavesSessao.participanteLogado
   );
+
+  const [idsCampeonatosComInscricao, setIdsCampeonatosComInscricao] = useState(
+    () => new Set<number>()
+  );
+
+  useEffect(() => {
+    if (!tokenParticipante) {
+      setIdsCampeonatosComInscricao(new Set());
+      return;
+    }
+    let ativo = true;
+    (async () => {
+      try {
+        const minhas = (await listarMinhasInscricoes(tokenParticipante)) as any[];
+        if (!ativo) return;
+        const ids = new Set<number>();
+        for (const item of minhas || []) {
+          const cid = item?.campeonatoId ?? item?.campeonato?.id;
+          if (cid != null && !Number.isNaN(Number(cid))) ids.add(Number(cid));
+        }
+        setIdsCampeonatosComInscricao(ids);
+      } catch {
+        if (ativo) setIdsCampeonatosComInscricao(new Set());
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [tokenParticipante]);
+
+  function usuarioJaInscritoNoCampeonato(campeonatoId: number) {
+    return idsCampeonatosComInscricao.has(Number(campeonatoId));
+  }
 
   useEffect(() => {
     async function carregar() {
@@ -300,19 +337,33 @@ export default function CampeonatosPublicosPage() {
                           <Eye aria-hidden className="campeonatos-action-icon" />
                         </button>
                     {campeonato.inscricoesAbertas ? (
-                          <button
-                            type="button"
-                            className="campeonatos-action campeonatos-action--primary campeonatos-action--icon"
-                            aria-label={`Participar do campeonato ${campeonato.nome}`}
-                            onClick={() =>
-                              setInscricaoModal({
-                                id: campeonato.id,
-                                nome: campeonato.nome
-                              })
-                            }
-                          >
-                            <UserPlus aria-hidden className="campeonatos-action-icon" />
-                          </button>
+                      tokenParticipante &&
+                      usuarioJaInscritoNoCampeonato(campeonato.id) ? (
+                        <button
+                          type="button"
+                          className="campeonatos-action campeonatos-action--icon"
+                          disabled
+                          aria-label={`Você já está inscrito em ${campeonato.nome}`}
+                          title="Você já está inscrito neste campeonato."
+                          style={{ opacity: 0.55, cursor: "not-allowed" }}
+                        >
+                          <UserPlus aria-hidden className="campeonatos-action-icon" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="campeonatos-action campeonatos-action--primary campeonatos-action--icon"
+                          aria-label={`Participar do campeonato ${campeonato.nome}`}
+                          onClick={() =>
+                            setInscricaoModal({
+                              id: campeonato.id,
+                              nome: campeonato.nome
+                            })
+                          }
+                        >
+                          <UserPlus aria-hidden className="campeonatos-action-icon" />
+                        </button>
+                      )
                     ) : null}
                       </td>
                     </tr>
@@ -673,19 +724,33 @@ export default function CampeonatosPublicosPage() {
                 <X aria-hidden className="campeonatos-btn-icon" />
         </Link>
               {campeonatoAberto.inscricoesAbertas ? (
-                <button
-                  type="button"
-                  className="campeonatos-btn campeonatos-btn--primary campeonatos-btn--icon"
-                  aria-label="Participar"
-                  onClick={() => {
-                    const id = campeonatoAberto.id;
-                    const nome = campeonatoAberto.nome;
-                    setCampeonatoAberto(null);
-                    setInscricaoModal({ id, nome });
-                  }}
-                >
-                  <UserPlus aria-hidden className="campeonatos-btn-icon" />
-                </button>
+                tokenParticipante &&
+                usuarioJaInscritoNoCampeonato(campeonatoAberto.id) ? (
+                  <button
+                    type="button"
+                    className="campeonatos-btn campeonatos-btn--ghost campeonatos-btn--icon"
+                    disabled
+                    aria-label="Você já está inscrito neste campeonato"
+                    title="Você já está inscrito neste campeonato."
+                    style={{ opacity: 0.55, cursor: "not-allowed" }}
+                  >
+                    <UserPlus aria-hidden className="campeonatos-btn-icon" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="campeonatos-btn campeonatos-btn--primary campeonatos-btn--icon"
+                    aria-label="Participar"
+                    onClick={() => {
+                      const id = campeonatoAberto.id;
+                      const nome = campeonatoAberto.nome;
+                      setCampeonatoAberto(null);
+                      setInscricaoModal({ id, nome });
+                    }}
+                  >
+                    <UserPlus aria-hidden className="campeonatos-btn-icon" />
+                  </button>
+                )
               ) : null}
             </div>
           </div>

@@ -4,7 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { buscarCampeonatoPorId, criarInscricaoIndividual } from "@/lib/api";
+import {
+  buscarCampeonatoPorId,
+  criarInscricaoIndividual,
+  listarMinhasInscricoes
+} from "@/lib/api";
 import {
   chavesSessao,
   getJSONStorage,
@@ -168,6 +172,7 @@ export default function InscricaoCampeonatoContent({
   const [aceitouRegras, setAceitouRegras] = useState(false);
   const [modalRegrasAberto, setModalRegrasAberto] = useState(false);
   const [tentouEnviar, setTentouEnviar] = useState(false);
+  const [jaInscritoNesteCampeonato, setJaInscritoNesteCampeonato] = useState(false);
 
   useEffect(() => {
     if (variant !== "page") return;
@@ -191,6 +196,31 @@ export default function InscricaoCampeonatoContent({
     }
     carregar();
   }, [campeonatoId]);
+
+  useEffect(() => {
+    if (!tokenParticipante || !campeonatoId) {
+      setJaInscritoNesteCampeonato(false);
+      return;
+    }
+    let ativo = true;
+    (async () => {
+      try {
+        const minhas = (await listarMinhasInscricoes(tokenParticipante)) as any[];
+        if (!ativo) return;
+        const alvo = Number(campeonatoId);
+        const tem = (minhas || []).some((item) => {
+          const cid = item?.campeonatoId ?? item?.campeonato?.id;
+          return cid != null && Number(cid) === alvo;
+        });
+        setJaInscritoNesteCampeonato(tem);
+      } catch {
+        if (ativo) setJaInscritoNesteCampeonato(false);
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [tokenParticipante, campeonatoId]);
 
   function onComprovanteChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -220,6 +250,11 @@ export default function InscricaoCampeonatoContent({
     setTentouEnviar(true);
     if (!campeonato || !campeonatoId) return;
     if (!tokenParticipante) return;
+
+    if (jaInscritoNesteCampeonato) {
+      setMensagem("Você já está inscrito neste campeonato.");
+      return;
+    }
 
     if (campeonato.modoInscricao !== "INDIVIDUAL") {
       setMensagem("Este campeonato não está em modo de inscrição individual.");
@@ -321,6 +356,11 @@ export default function InscricaoCampeonatoContent({
         <p className="mensagem">
           Este campeonato não está configurado para inscrição individual. Entre em contato com a
           organização ou use o fluxo de inscrição por equipe, se disponível.
+        </p>
+      ) : jaInscritoNesteCampeonato ? (
+        <p className="mensagem" role="status">
+          Você já está inscrito neste campeonato. Não é possível realizar uma nova inscrição,
+          independentemente do status da inscrição anterior.
         </p>
       ) : (
         <>

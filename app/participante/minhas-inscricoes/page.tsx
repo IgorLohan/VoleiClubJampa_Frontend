@@ -81,7 +81,8 @@ function traduzirFormato(formato: string) {
   const mapa: Record<string, string> = {
     MATA_MATA: "Mata-mata",
     DUPLA_ELIMINACAO: "Upper/Lower",
-    TODOS_CONTRA_TODOS: "Todos contra todos"
+    TODOS_CONTRA_TODOS: "Todos contra todos",
+    GRUPOS_3X4_REPESCAGEM: "Grupos + repescagem"
   };
   return mapa[formato] || formato;
 }
