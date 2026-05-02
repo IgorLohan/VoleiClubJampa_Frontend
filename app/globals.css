@@ -857,6 +857,19 @@ body {
   scrollbar-gutter: stable both-edges;
 }
 
+/* Pré-visualização do comprovante (admin inscrições) */
+.admin-comprovante-modal-img {
+  display: block;
+  max-width: 100%;
+  max-height: min(72vh, 720px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  background: rgba(32, 54, 103, 0.04);
+}
+
 .campeonatos-modal-tabs {
   position: sticky;
   top: 0;

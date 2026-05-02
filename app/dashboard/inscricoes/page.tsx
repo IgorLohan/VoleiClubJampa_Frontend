@@ -13,6 +13,7 @@ import {
 import { chavesSessao, getStorage } from "@/lib/sessao";
 import {
   Check,
+  FileImage,
   Pencil,
   Trash2
 } from "lucide-react";
@@ -64,6 +65,10 @@ function InscricoesAdminPage() {
   const [editTamanhoCamisa, setEditTamanhoCamisa] = useState("");
   const [editValorCentavos, setEditValorCentavos] = useState<number>(0);
   const [editObservacao, setEditObservacao] = useState("");
+  const [comprovanteModal, setComprovanteModal] = useState<{
+    src: string;
+    jogador: string;
+  } | null>(null);
 
   useEffect(() => {
     async function carregarCampeonatos() {
@@ -102,6 +107,15 @@ function InscricoesAdminPage() {
     }
     carregarResumo();
   }, [campeonatoId]);
+
+  useEffect(() => {
+    if (!comprovanteModal) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setComprovanteModal(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [comprovanteModal]);
 
   const inscricoesIndividuais = useMemo(() => resumo?.inscricoesIndividuais || [], [resumo]);
 
@@ -248,6 +262,7 @@ function InscricoesAdminPage() {
                     const aprovada = String(i?.statusAnalise || "").toUpperCase() === "APROVADA";
                     const cancelada = String(i?.status || "").toUpperCase() === "CANCELADA";
                     const usada = String(i?.status || "").toUpperCase() === "USADA_EM_EQUIPE";
+                    const comprovante = String(i?.comprovantePagamento || "").trim();
 
                     return (
                       <tr key={`individual-${i.id}`}>
@@ -279,6 +294,32 @@ function InscricoesAdminPage() {
                                 <Check aria-hidden className="campeonatos-action-icon" />
                               </button>
                             ) : null}
+                            {comprovante ? (
+                              <button
+                                type="button"
+                                className="campeonatos-action campeonatos-action--icon"
+                                title="Ver comprovante"
+                                aria-label={`Ver comprovante de ${i.usuario?.nome || "jogador"}`}
+                                onClick={() =>
+                                  setComprovanteModal({
+                                    src: comprovante,
+                                    jogador: String(i.usuario?.nome || "Jogador")
+                                  })
+                                }
+                              >
+                                <FileImage aria-hidden className="campeonatos-action-icon" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="campeonatos-action campeonatos-action--icon"
+                                disabled
+                                title="Nenhum comprovante enviado"
+                                aria-label="Comprovante não disponível"
+                              >
+                                <FileImage aria-hidden className="campeonatos-action-icon" />
+                              </button>
+                            )}
                             <button
                               type="button"
                               className="campeonatos-action campeonatos-action--icon"
@@ -406,6 +447,52 @@ function InscricoesAdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {comprovanteModal ? (
+        <div
+          className="campeonatos-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Comprovante de pagamento"
+          style={{ zIndex: 60 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setComprovanteModal(null);
+          }}
+        >
+          <div className="campeonatos-modal campeonatos-modal--full">
+            <div className="campeonatos-modal-head">
+              <div>
+                <div className="campeonatos-modal-title">Comprovante de pagamento</div>
+                <div className="campeonatos-modal-name">{comprovanteModal.jogador}</div>
+              </div>
+              <button
+                type="button"
+                className="campeonatos-modal-close"
+                onClick={() => setComprovanteModal(null)}
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="campeonatos-modal-scroll" style={{ display: "flex", justifyContent: "center" }}>
+              <img
+                src={comprovanteModal.src}
+                alt={`Comprovante enviado por ${comprovanteModal.jogador}`}
+                className="admin-comprovante-modal-img"
+              />
+            </div>
+            <div className="campeonatos-modal-actions">
+              <button
+                type="button"
+                className="campeonatos-btn campeonatos-btn--primary"
+                onClick={() => setComprovanteModal(null)}
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
