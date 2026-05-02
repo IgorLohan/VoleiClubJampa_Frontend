@@ -615,17 +615,18 @@ export default function DashboardPage() {
                   role="dialog"
                   aria-modal="true"
                   aria-labelledby="titulo-modal-editar-perfil"
-                  className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto bg-[#203667]/40 px-4 py-8 backdrop-blur-sm sm:items-center sm:py-12"
+                  className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto bg-[#203667]/45 px-4 pb-12 pt-14 backdrop-blur-[6px] min-[480px]:px-6 sm:items-center sm:px-8 sm:py-14"
                   onClick={fecharModalEditarPerfil}
                 >
                   <div
-                    className="w-full max-w-lg rounded-2xl border border-[#203667]/14 bg-[#FFFFFF] shadow-[0_24px_60px_rgba(32,54,103,0.22)]"
+                    className="mx-auto mb-6 w-full max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-[#203667]/12 bg-white shadow-[0_28px_80px_rgba(32,54,103,0.28)] ring-1 ring-[#203667]/5 sm:mb-0 sm:max-w-xl min-[480px]:max-w-[calc(100vw-2.5rem)]"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-start justify-between gap-3 border-b border-[#203667]/10 px-5 py-4 sm:px-6">
+                    <div className="relative flex items-start justify-between gap-4 border-b border-[#203667]/10 bg-gradient-to-br from-[#F8FAFC] via-white to-[#FFF9F3] px-6 py-5 sm:px-10 sm:py-7 md:px-12">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#F39200] via-[#E44631] to-[#203667]/30" aria-hidden />
                       <h2
                         id="titulo-modal-editar-perfil"
-                        className="m-0 text-lg font-black tracking-[-0.3px] text-[#203667] sm:text-xl"
+                        className="m-0 pr-2 text-xl font-black tracking-[-0.4px] text-[#203667] sm:text-2xl"
                       >
                         Editar perfil
                       </h2>
@@ -633,14 +634,14 @@ export default function DashboardPage() {
                         type="button"
                         onClick={fecharModalEditarPerfil}
                         aria-label="Fechar"
-                        className="-m-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#203667]/70 transition hover:bg-[#203667]/[0.06] hover:text-[#203667]"
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#203667]/55 transition hover:bg-[#203667]/8 hover:text-[#203667] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F39200]"
                       >
-                        <X className="h-5 w-5" aria-hidden />
+                        <X className="h-5 w-5" strokeWidth={2.25} aria-hidden />
                       </button>
                     </div>
 
                     <form
-                      className="flex flex-col gap-4 px-5 pb-5 pt-4 sm:px-6 sm:pb-6"
+                      className="flex flex-col gap-6 px-8 pb-10 pt-7 sm:gap-7 sm:px-10 sm:pb-10 sm:pt-8 md:px-12"
                       onSubmit={async (e) => {
                         e.preventDefault();
                         if (!tokenParticipante) {
@@ -679,44 +680,51 @@ export default function DashboardPage() {
                       }}
                     >
                       {msgPerfil ? (
-                        <div className="auth-banner auth-banner--info">{msgPerfil}</div>
+                        <div
+                          role="alert"
+                          className="rounded-xl border border-[#203667]/12 bg-[#203667]/[0.06] px-4 py-3 text-sm font-semibold leading-snug text-[#203667]"
+                        >
+                          {msgPerfil}
+                        </div>
                       ) : null}
 
-                      <div className="flex flex-col flex-wrap gap-4 sm:flex-row">
-                        <label className="flex w-full min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:basis-full">
-                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                      <div className="rounded-2xl border border-[#203667]/10 bg-gradient-to-b from-[#F4F7FC] to-white p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-7">
+                        <label className="flex w-full flex-col gap-2">
+                          <span className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-[#203667]/70">
                             Foto do perfil
                           </span>
                           <input
                             type="file"
                             accept="image/jpeg,image/jpg,image/png,image/webp"
                             disabled={salvandoPerfil}
-                            className="w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 py-2 font-semibold text-[#203667]/90 shadow-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[#F39200]/15 file:px-3 file:py-2 file:font-black file:text-[#203667] hover:file:bg-[#F39200]/25"
+                            className="w-full cursor-pointer rounded-xl border border-[#203667]/12 bg-white/90 px-3 py-2.5 text-sm font-semibold text-[#203667]/90 shadow-sm transition file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-[#F39200] file:to-[#E44631] file:px-4 file:py-2.5 file:text-sm file:font-black file:text-white file:shadow-md hover:file:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                             onChange={(e) => {
                               const file = e.target.files?.[0] || null;
                               setFotoArquivo(file);
                               setFotoPreview(file ? URL.createObjectURL(file) : null);
                             }}
                           />
-                          <small className="text-[0.82rem] leading-snug text-[#203667]/70">
-                            Selecione uma imagem (JPG, PNG ou WEBP). O upload acontece ao clicar em
-                            “Salvar”.
-                          </small>
+                          <p className="m-0 text-[0.8125rem] leading-relaxed text-[#203667]/65">
+                            JPG, PNG ou WEBP. O envio da foto ocorre ao clicar em{" "}
+                            <span className="font-bold text-[#203667]/85">Salvar</span>.
+                          </p>
                           {fotoPreview || montarUrlFoto(perfil?.fotoPerfil) ? (
-                            <div className="mt-2.5">
+                            <div className="mt-4 flex justify-center sm:mt-5">
                               <img
                                 src={
                                   (fotoPreview || (montarUrlFoto(perfil?.fotoPerfil) as string)) as string
                                 }
                                 alt="Prévia da foto do perfil"
-                                className="h-[132px] w-[132px] rounded-2xl border border-[#FFFFFF] object-cover shadow-[0_16px_40px_rgba(32,54,103,0.14)] ring-1 ring-[#203667]/10"
+                                className="h-[140px] w-[140px] rounded-2xl border-4 border-white object-cover shadow-[0_20px_48px_rgba(32,54,103,0.18)] ring-2 ring-[#203667]/10"
                               />
                             </div>
                           ) : null}
                         </label>
+                      </div>
 
-                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
-                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5">
+                        <label className="flex min-w-0 flex-col gap-2 sm:col-span-2">
+                          <span className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-[#203667]/70">
                             Nome
                           </span>
                           <input
@@ -724,12 +732,12 @@ export default function DashboardPage() {
                             onChange={(e) => setFormPerfil((p) => ({ ...p, nome: e.target.value }))}
                             required
                             disabled={salvandoPerfil}
-                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                            className="h-12 w-full rounded-xl border border-[#203667]/14 bg-white px-4 font-semibold text-[#203667] shadow-sm outline-none transition placeholder:text-[#203667]/35 focus-visible:border-[#F39200]/55 focus-visible:ring-4 focus-visible:ring-[#F39200]/22 disabled:opacity-60"
                           />
                         </label>
 
-                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
-                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                        <label className="flex min-w-0 flex-col gap-2">
+                          <span className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-[#203667]/70">
                             Contato
                           </span>
                           <input
@@ -742,12 +750,12 @@ export default function DashboardPage() {
                             }
                             placeholder="(xx) xxxxx-xxxx"
                             disabled={salvandoPerfil}
-                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                            className="h-12 w-full rounded-xl border border-[#203667]/14 bg-white px-4 font-semibold text-[#203667] shadow-sm outline-none transition placeholder:text-[#203667]/35 focus-visible:border-[#F39200]/55 focus-visible:ring-4 focus-visible:ring-[#F39200]/22 disabled:opacity-60"
                           />
                         </label>
 
-                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
-                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                        <label className="flex min-w-0 flex-col gap-2">
+                          <span className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-[#203667]/70">
                             Data de nascimento
                           </span>
                           <input
@@ -761,19 +769,19 @@ export default function DashboardPage() {
                               setFormPerfil((p) => ({ ...p, dataNascimento: e.target.value }))
                             }
                             disabled={salvandoPerfil}
-                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                            className="h-12 w-full rounded-xl border border-[#203667]/14 bg-white px-4 font-semibold text-[#203667] shadow-sm outline-none transition focus-visible:border-[#F39200]/55 focus-visible:ring-4 focus-visible:ring-[#F39200]/22 disabled:opacity-60"
                           />
                         </label>
 
-                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
-                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                        <label className="flex min-w-0 flex-col gap-2 sm:col-span-2 sm:max-w-md">
+                          <span className="text-[0.7rem] font-black uppercase tracking-[0.14em] text-[#203667]/70">
                             Sexo
                           </span>
                           <select
                             value={formPerfil.sexo}
                             onChange={(e) => setFormPerfil((p) => ({ ...p, sexo: e.target.value }))}
                             disabled={salvandoPerfil}
-                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                            className="h-12 w-full cursor-pointer rounded-xl border border-[#203667]/14 bg-white px-4 font-semibold text-[#203667] shadow-sm outline-none transition focus-visible:border-[#F39200]/55 focus-visible:ring-4 focus-visible:ring-[#F39200]/22 disabled:opacity-60"
                           >
                             <option value="">—</option>
                             <option value="MASCULINO">Masculino</option>
@@ -782,18 +790,18 @@ export default function DashboardPage() {
                         </label>
                       </div>
 
-                      <div className="flex flex-wrap justify-end gap-2.5 border-t border-[#203667]/10 pt-4">
+                      <div className="mt-2 flex flex-col-reverse gap-3 border-t border-[#203667]/10 pt-8 sm:flex-row sm:justify-end sm:gap-4 sm:pt-9">
                         <button
                           type="button"
                           onClick={fecharModalEditarPerfil}
                           disabled={salvandoPerfil}
-                          className="inline-flex items-center justify-center rounded-full border border-[#203667]/20 bg-[#FFFFFF] px-5 py-2.5 font-black text-[#203667] shadow-sm transition hover:bg-[#203667]/[0.06] disabled:opacity-70"
+                          className="inline-flex h-12 min-w-[7.5rem] items-center justify-center rounded-full border border-[#203667]/18 bg-white px-6 font-black text-[#203667] shadow-sm transition hover:bg-[#F4F7FC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#203667]/40 disabled:opacity-60"
                         >
                           Cancelar
                         </button>
                         <button
                           type="submit"
-                          className="inline-flex items-center justify-center rounded-full border border-[#F39200]/40 bg-gradient-to-r from-[#F39200] to-[#E44631] px-5 py-2.5 font-black text-[#FFFFFF] shadow-[0_14px_30px_rgba(228,70,49,0.25)] transition hover:brightness-[1.03] disabled:cursor-not-allowed disabled:opacity-70"
+                          className="inline-flex h-12 min-w-[7.5rem] items-center justify-center rounded-full bg-gradient-to-r from-[#F39200] to-[#E44631] px-6 font-black text-white shadow-[0_12px_28px_rgba(228,70,49,0.35)] transition hover:brightness-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#203667] disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={salvandoPerfil}
                         >
                           {salvandoPerfil ? "Salvando..." : "Salvar"}
