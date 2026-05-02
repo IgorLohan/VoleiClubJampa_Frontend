@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Identidade (paleta):
    #FFFFFF (branco), #203667 (azul), #E44631 (vermelho), #F39200 (laranja) */
 :root {
@@ -2880,7 +2882,7 @@ button.dash-link {
   width: min(1100px, 92%);
   max-width: 100%;
   margin: 0 auto;
-  padding: 26px 0 46px;
+  padding: 26px 10px 46px;
   display: grid;
   gap: 18px;
   min-width: 0;
@@ -2905,6 +2907,30 @@ button.dash-link {
   max-width: 100%;
   overflow-x: clip;
   box-sizing: border-box;
+}
+
+/*
+ * Perfil (dashboard): painel cinza com dois cards brancos — padding/gap fixos
+ * para os internos não colarem na borda (evita conflito de cascata / utilitários).
+ */
+[data-perfil-painel-externo] {
+  box-sizing: border-box;
+  padding: 20px;
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  [data-perfil-painel-externo] {
+    padding: 24px;
+    gap: 28px;
+  }
+}
+
+@media (min-width: 768px) {
+  [data-perfil-painel-externo] {
+    padding: 32px;
+    gap: 32px;
+  }
 }
 
 /* Padrão de “página” dentro do dashboard (sem afetar público) */
@@ -3052,6 +3078,10 @@ button.dash-link {
   gap: 14px;
 }
 
+.dash-grid--single {
+  grid-template-columns: 1fr;
+}
+
 .dash-card {
   border-radius: 18px;
   border: 1px solid var(--border);
@@ -3116,6 +3146,9 @@ button.dash-link {
 /* Participante (perfil) */
 .profile-card {
   gap: 14px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .profile-head {
@@ -3231,6 +3264,17 @@ button.dash-link {
   }
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+  }
+  .profile-title p {
+    font-size: 0.9rem;
   }
 }
 
@@ -3515,7 +3559,7 @@ button.dash-link {
   .dash-content {
     width: min(1100px, 92%);
     margin: 0 auto;
-    padding-top: 22px;
+    padding: 22px 12px 40px;
   }
 
   .dash-sidebar-inner {

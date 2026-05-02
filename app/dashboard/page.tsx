@@ -18,6 +18,7 @@ import {
   listarCampeonatosAdmin
 } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { Calendar, Check, Mail, Pencil, Phone, UserRound, X } from "lucide-react";
 
 type SessaoUsuario = {
   id?: number;
@@ -95,7 +96,7 @@ export default function DashboardPage() {
   const [sessao] = useState(() => normalizarSessao());
   const tokenParticipante = getStorage(chavesSessao.tokenParticipante);
   const [perfil, setPerfil] = useState<SessaoUsuario>(() => sessao.usuario);
-  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [modalEditarPerfilAberto, setModalEditarPerfilAberto] = useState(false);
   const [salvandoPerfil, setSalvandoPerfil] = useState(false);
   const [msgPerfil, setMsgPerfil] = useState("");
   const [fotoArquivo, setFotoArquivo] = useState<File | null>(null);
@@ -121,12 +122,38 @@ export default function DashboardPage() {
     return nome ? `Olá, ${nome}!` : "Bem-vindo!";
   }, [sessao.usuario?.nome]);
 
+  const primeiroNomePerfil = useMemo(() => {
+    const nome = String(perfil?.nome || "").trim();
+    if (!nome) return "";
+    return nome.split(/\s+/)[0] || nome;
+  }, [perfil?.nome]);
+
   if (!sessao.papel) return null;
 
   function montarUrlFoto(foto: string | null | undefined) {
     if (!foto) return null;
     if (/^https?:\/\//i.test(foto)) return foto;
     return `${API_BASE}${foto.startsWith("/") ? "" : "/"}${foto}`;
+  }
+
+  function abrirModalEditarPerfil() {
+    setMsgPerfil("");
+    setModalEditarPerfilAberto(true);
+    setFotoArquivo(null);
+    setFotoPreview(null);
+    setFormPerfil({
+      nome: String(perfil?.nome || ""),
+      contato: String(perfil?.contato || ""),
+      dataNascimento: String(perfil?.dataNascimento || ""),
+      sexo: sexoEditavelPerfil(perfil?.sexo),
+    });
+  }
+
+  function fecharModalEditarPerfil() {
+    setModalEditarPerfilAberto(false);
+    setMsgPerfil("");
+    setFotoArquivo(null);
+    setFotoPreview(null);
   }
 
   useEffect(() => {
@@ -162,6 +189,19 @@ export default function DashboardPage() {
     const t = window.setTimeout(() => setModalSucessoAberto(false), 2500);
     return () => window.clearTimeout(t);
   }, [modalSucessoAberto]);
+
+  useEffect(() => {
+    if (!modalEditarPerfilAberto) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setModalEditarPerfilAberto(false);
+      setMsgPerfil("");
+      setFotoArquivo(null);
+      setFotoPreview(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modalEditarPerfilAberto]);
 
   useEffect(() => {
     if (sessao.papel !== "ADMIN") return;
@@ -261,9 +301,25 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="dash-hero">
-        <h1 className="dash-title">{saudacao}</h1>
-      </div>
+      {sessao.papel === "ADMIN" ? (
+        <div className="dash-hero">
+          <h1 className="dash-title">{saudacao}</h1>
+        </div>
+      ) : (
+        <header className="mb-4">
+          <h1 className="m-0 bg-gradient-to-r from-[#203667] via-[#F39200] to-[#E44631] bg-clip-text text-2xl font-black tracking-[-0.6px] text-transparent sm:text-3xl">
+            {perfil?.nome?.trim()
+              ? `Olá, ${perfil.nome.trim()}!`
+              : primeiroNomePerfil
+                ? `Olá, ${primeiroNomePerfil}!`
+                : saudacao}
+          </h1>
+          <p className="mt-2 m-0 max-w-[62ch] text-sm leading-relaxed text-[#203667]/75">
+            <span className="font-semibold text-[#F39200]">Bem-vindo</span> ao seu painel de atleta.
+            Confira suas informações e acompanhe sua jornada.
+          </p>
+        </header>
+      )}
 
       {sessao.papel === "ADMIN" ? (
         <section className="admin-dash" aria-label="Dashboard do administrador">
@@ -366,46 +422,165 @@ export default function DashboardPage() {
           ) : null}
         </section>
       ) : (
-        <div className="dash-grid">
-          <article className="dash-card profile-card" aria-label="Perfil do participante">
-            <div className="profile-head">
-              <div className="profile-avatar">
-                {montarUrlFoto(perfil?.fotoPerfil) ? (
-                  <img
-                    src={montarUrlFoto(perfil?.fotoPerfil) as string}
-                    alt={`Foto de ${perfil?.nome || "participante"}`}
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
+        <div className="box-border flex w-full max-w-full flex-col items-center gap-4 px-[10px] pb-[10px] pt-0 sm:px-4 sm:pb-4">
+          <article
+            className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#FFFFFF] shadow-[0_10px_28px_rgba(32,54,103,0.10)]"
+            aria-label="Perfil do participante"
+          >
+            <div className="relative box-border p-3 sm:p-4 md:p-5">
+              <div className="flex min-w-0 flex-col flex-wrap items-stretch gap-5 md:gap-0 md:flex-nowrap md:flex-row">
+                <div className="relative min-h-[260px] w-full shrink-0 overflow-visible bg-gradient-to-br from-[#FFEB99] via-[#F5B041] to-[#F39200] md:min-h-[300px] md:w-[min(100%,264px)] md:max-w-[264px] md:flex-[0_0_264px]">
+                  {/* Brilho suave + leve calor na base (identidade laranja/vermelho) */}
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.35)_0%,transparent_48%,rgba(228,70,49,0.12)_100%)]"
+                    aria-hidden
                   />
-                ) : (
-                  <span aria-hidden>{(perfil?.nome || "P").trim().slice(0, 1).toUpperCase()}</span>
-                )}
-              </div>
+                  <div
+                    className="pointer-events-none absolute inset-y-6 left-0 w-1 rounded-full bg-gradient-to-b from-[#FFFFFF] via-[#F39200] to-[#E44631]"
+                    aria-hidden
+                  />
 
-              <div className="profile-title">
-                <h2>Meu perfil</h2>
-                <p>Veja e edite seus dados de participante.</p>
-              </div>
+                  <div className="relative z-[2] flex h-full min-h-[inherit] items-center justify-center px-6 py-12 sm:px-8 sm:py-12 md:justify-end md:px-10 md:py-10 md:pr-4">
+                    {/* Avatar + anéis no mesmo centro (sem translate solto) */}
+                    <div className="relative size-[228px] shrink-0 sm:size-[244px] md:size-[258px]">
+                      <div
+                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[222px] w-[222px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FFFFFF]/35 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)] ring-1 ring-[#203667]/15 sm:h-[236px] sm:w-[236px] md:h-[250px] md:w-[250px]"
+                        aria-hidden
+                      />
+                      <div
+                        className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[188px] w-[188px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FFFFFF] shadow-[0_1px_0_rgba(255,255,255,0.9)_inset] sm:h-[200px] sm:w-[200px] md:h-[212px] md:w-[212px]"
+                        aria-hidden
+                      />
+                      <div className="absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2">
+                        <div className="relative">
+                          <div className="h-[142px] w-[142px] overflow-hidden rounded-full border-[3px] border-[#FFFFFF] bg-[#F39200]/25 shadow-[0_16px_40px_rgba(32,54,103,0.18)] ring-1 ring-[#FFFFFF]/40 sm:h-[154px] sm:w-[154px] md:h-[172px] md:w-[172px] md:border-4">
+                            {montarUrlFoto(perfil?.fotoPerfil) ? (
+                              <img
+                                src={montarUrlFoto(perfil?.fotoPerfil) as string}
+                                alt={`Foto de ${perfil?.nome || "participante"}`}
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                className="h-full w-full min-h-full min-w-full scale-110 object-cover object-[center_22%]"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#F39200]/30 to-[#E44631]/25">
+                                <span className="text-3xl font-black text-[#FFFFFF]" aria-hidden>
+                                  {(perfil?.nome || "P").trim().slice(0, 1).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 z-[30] sm:-bottom-0.5 sm:-right-0.5">
+                            <button
+                              type="button"
+                              onClick={abrirModalEditarPerfil}
+                              aria-label="Editar perfil"
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#F39200] to-[#E44631] text-[#FFFFFF] shadow-[0_8px_22px_rgba(228,70,49,0.35)] ring-2 ring-[#FFFFFF] transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#203667]"
+                            >
+                              <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-              <div className="profile-actions">
-                <button
-                  type="button"
-                  className="dash-pill"
-                  onClick={() => {
-                    setMsgPerfil("");
-                    setEditandoPerfil((v) => !v);
-                    setFotoArquivo(null);
-                    setFotoPreview(null);
-                    setFormPerfil({
-                      nome: String(perfil?.nome || ""),
-                      contato: String(perfil?.contato || ""),
-                      dataNascimento: String(perfil?.dataNascimento || ""),
-                      sexo: sexoEditavelPerfil(perfil?.sexo),
-                    });
-                  }}
+                <div
+                  className="relative flex min-h-[300px] min-w-0 w-full flex-1 flex-col bg-transparent pl-0 pr-5 pb-8 sm:pr-8 sm:pb-9 md:min-h-0 md:basis-0 md:pr-10 md:pb-10 lg:pr-12 lg:pb-10"
+                  aria-label="Resumo do atleta"
                 >
-                  {editandoPerfil ? "Cancelar" : "Editar"}
-                </button>
+                  <div
+                    data-perfil-painel-externo
+                    className="mt-8 box-border flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden rounded-2xl border border-[#203667]/12 bg-[#F4F7FC] shadow-[0_8px_30px_rgba(32,54,103,0.08)] sm:mt-10 md:mt-0 md:rounded-l-none md:border-l-0"
+                    aria-label="Painel externo do perfil"
+                  >
+                    <section
+                      className="grid min-w-0 shrink-0 grid-cols-1 gap-4 border-0 bg-transparent px-6 py-5 shadow-none sm:gap-4 sm:px-8 sm:py-6 md:px-10"
+                      aria-label="Card do atleta"
+                    >
+                      <div className="grid text-xs font-black uppercase tracking-[0.22em] text-[#F39200]">
+                        Atleta
+                      </div>
+                      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                        <h2 className="m-0 text-2xl font-black tracking-[-0.6px] text-[#203667] sm:text-3xl">
+                          {perfil?.nome?.trim() || "Participante"}
+                        </h2>
+                        <span className="inline-flex items-center gap-1.5 justify-self-start rounded-full border border-[#E44631]/40 bg-[#F39200]/12 px-2.5 py-1 text-[0.72rem] font-black text-[#203667] sm:justify-self-end">
+                          <Check className="h-3.5 w-3.5 text-[#E44631]" aria-hidden />
+                          Participante verificado
+                        </span>
+                      </div>
+                      <div
+                        className="h-1 w-12 rounded-full bg-gradient-to-r from-[#F39200] to-[#E44631]"
+                        aria-hidden
+                      />
+                      <p className="m-0 max-w-none text-sm leading-relaxed text-[#203667]/70 sm:text-[0.95rem]">
+                        Participe. Compita. Supere seus limites.
+                      </p>
+                    </section>
+
+                    <section
+                      className="grid min-w-0 shrink-0 grid-cols-1 gap-4 border-0 bg-transparent px-6 py-5 shadow-none sm:px-8 sm:py-6 md:px-10"
+                      aria-label="Card de informações"
+                    >
+                      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid min-w-0 grid-cols-[2.5rem_1fr] items-center gap-3">
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-[#203667]">
+                            <Mail className="h-5 w-5" aria-hidden />
+                          </span>
+                          <div className="grid min-w-0 gap-0.5">
+                            <div className="text-xs font-semibold text-[#203667]/65">E-mail</div>
+                            <div className="text-sm font-bold leading-snug text-[#203667] [overflow-wrap:anywhere]">
+                              {perfil?.email?.trim() ? perfil.email : "—"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid min-w-0 grid-cols-[2.5rem_1fr] items-center gap-3">
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F39200]/20 text-[#203667]">
+                            <Phone className="h-5 w-5" aria-hidden />
+                          </span>
+                          <div className="grid min-w-0 gap-0.5">
+                            <div className="text-xs font-semibold text-[#203667]/65">Contato</div>
+                            <div className="break-words text-sm font-bold leading-snug text-[#203667]">
+                              {perfil?.contato?.trim()
+                                ? formatarTelefoneBR(perfil.contato) || perfil.contato
+                                : "—"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid min-w-0 grid-cols-[2.5rem_1fr] items-center gap-3">
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-[#203667]">
+                            <Calendar className="h-5 w-5" aria-hidden />
+                          </span>
+                          <div className="grid min-w-0 gap-0.5">
+                            <div className="text-xs font-semibold text-[#203667]/65">Nascimento</div>
+                            <div className="break-words text-sm font-bold leading-snug text-[#203667]">
+                              {perfil?.dataNascimento
+                                ? formatarDataBR(perfil.dataNascimento) ||
+                                  String(perfil.dataNascimento).slice(0, 10)
+                                : "—"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid min-w-0 grid-cols-[2.5rem_1fr] items-center gap-3">
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#203667]/10 text-[#203667]">
+                            <UserRound className="h-5 w-5" aria-hidden />
+                          </span>
+                          <div className="grid min-w-0 gap-0.5">
+                            <div className="text-xs font-semibold text-[#203667]/65">Sexo</div>
+                            <div className="break-words text-sm font-bold leading-snug text-[#203667]">
+                              {formatarSexoExibicao(perfil?.sexo)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -414,210 +589,221 @@ export default function DashboardPage() {
                 role="dialog"
                 aria-live="polite"
                 aria-label="Confirmação"
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  background: "rgba(15, 23, 42, 0.28)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "center",
-                  paddingTop: 18,
-                  zIndex: 9999
-                }}
+                className="fixed inset-0 z-[9999] flex items-start justify-center bg-[#203667]/35 px-4 pt-5 backdrop-blur-sm"
                 onClick={() => setModalSucessoAberto(false)}
               >
                 <div
-                  style={{
-                    background: "rgba(255,255,255,0.92)",
-                    border: "1px solid rgba(148,163,184,0.35)",
-                    borderRadius: 14,
-                    padding: "12px 14px",
-                    boxShadow: "0 12px 30px rgba(2, 6, 23, 0.18)",
-                    backdropFilter: "blur(10px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    maxWidth: 360,
-                    width: "calc(100% - 32px)",
-                    color: "#0f172a"
-                  }}
+                  className="w-full max-w-[380px] rounded-2xl border border-[#FFFFFF]/80 bg-[#FFFFFF]/95 p-4 text-[#203667] shadow-[0_18px_50px_rgba(32,54,103,0.2)] backdrop-blur-xl"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>Tudo certo</div>
-                  <div style={{ marginTop: 2, fontSize: 13, opacity: 0.9 }}>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F39200]/22 text-[#E44631] font-black">
+                      ✓
+                    </span>
+                    <div className="text-sm font-black text-[#203667]">Tudo certo</div>
+                  </div>
+                  <div className="mt-2 text-[0.92rem] leading-snug text-[#203667]/80">
                     {modalSucessoTexto}
                   </div>
                 </div>
               </div>
             ) : null}
 
-            {msgPerfil ? <div className="auth-banner auth-banner--info">{msgPerfil}</div> : null}
+            <div className="px-8 pb-10 sm:px-12 sm:pb-12 lg:px-16">
+              {modalEditarPerfilAberto ? (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="titulo-modal-editar-perfil"
+                  className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto bg-[#203667]/40 px-4 py-8 backdrop-blur-sm sm:items-center sm:py-12"
+                  onClick={fecharModalEditarPerfil}
+                >
+                  <div
+                    className="w-full max-w-lg rounded-2xl border border-[#203667]/14 bg-[#FFFFFF] shadow-[0_24px_60px_rgba(32,54,103,0.22)]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-start justify-between gap-3 border-b border-[#203667]/10 px-5 py-4 sm:px-6">
+                      <h2
+                        id="titulo-modal-editar-perfil"
+                        className="m-0 text-lg font-black tracking-[-0.3px] text-[#203667] sm:text-xl"
+                      >
+                        Editar perfil
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={fecharModalEditarPerfil}
+                        aria-label="Fechar"
+                        className="-m-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#203667]/70 transition hover:bg-[#203667]/[0.06] hover:text-[#203667]"
+                      >
+                        <X className="h-5 w-5" aria-hidden />
+                      </button>
+                    </div>
 
-            {!editandoPerfil ? (
-              <ul className="dash-kv">
-                <li>
-                  <strong>Nome</strong>
-                  <span>{perfil?.nome || "—"}</span>
-                </li>
-                <li>
-                  <strong>E-mail</strong>
-                  <span>{perfil?.email || "—"}</span>
-                </li>
-                <li>
-                  <strong>Contato</strong>
-                  <span>
-                    {perfil?.contato?.trim()
-                      ? formatarTelefoneBR(perfil.contato) || perfil.contato
-                      : "—"}
-                  </span>
-                </li>
-                <li>
-                  <strong>Nascimento</strong>
-                  <span>
-                    {perfil?.dataNascimento
-                      ? formatarDataBR(perfil.dataNascimento) ||
-                        String(perfil.dataNascimento).slice(0, 10)
-                      : "—"}
-                  </span>
-                </li>
-                <li>
-                  <strong>Sexo</strong>
-                  <span>{formatarSexoExibicao(perfil?.sexo)}</span>
-                </li>
-              </ul>
-            ) : (
-              <form
-                className="profile-form"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!tokenParticipante) {
-                    setMsgPerfil("Você precisa estar logado para editar seu perfil.");
-                    return;
-                  }
-                  setSalvandoPerfil(true);
-                  setMsgPerfil("");
-                  try {
-                    const payload = {
-                      nome: formPerfil.nome.trim(),
-                      contato: formPerfil.contato.trim() || null,
-                      dataNascimento: formPerfil.dataNascimento?.trim() || null,
-                      sexo: formPerfil.sexo?.trim() || null,
-                    };
-                    let dados = (await atualizarMeuPerfil(tokenParticipante, payload)) as any;
-                    let usuarioAtualizado = (dados?.usuario ?? dados) as any;
+                    <form
+                      className="flex flex-col gap-4 px-5 pb-5 pt-4 sm:px-6 sm:pb-6"
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!tokenParticipante) {
+                          setMsgPerfil("Você precisa estar logado para editar seu perfil.");
+                          return;
+                        }
+                        setSalvandoPerfil(true);
+                        setMsgPerfil("");
+                        try {
+                          const payload = {
+                            nome: formPerfil.nome.trim(),
+                            contato: formPerfil.contato.trim() || null,
+                            dataNascimento: formPerfil.dataNascimento?.trim() || null,
+                            sexo: formPerfil.sexo?.trim() || null,
+                          };
+                          let dados = (await atualizarMeuPerfil(tokenParticipante, payload)) as any;
+                          let usuarioAtualizado = (dados?.usuario ?? dados) as any;
 
-                    if (fotoArquivo) {
-                      dados = (await atualizarMinhaFotoPerfil(tokenParticipante, fotoArquivo)) as any;
-                      usuarioAtualizado = (dados?.usuario ?? dados) as any;
-                    }
+                          if (fotoArquivo) {
+                            dados = (await atualizarMinhaFotoPerfil(tokenParticipante, fotoArquivo)) as any;
+                            usuarioAtualizado = (dados?.usuario ?? dados) as any;
+                          }
 
-                    const novo = { ...(perfil || {}), ...(usuarioAtualizado || payload) };
-                    setPerfil(novo);
-                    setJSONStorage(chavesSessao.participanteLogado, novo);
-                    setEditandoPerfil(false);
-                    setModalSucessoTexto("Perfil atualizado com sucesso.");
-                    setModalSucessoAberto(true);
-                  } catch (err) {
-                    const error = err as Error;
-                    setMsgPerfil(`Não foi possível salvar: ${error.message}`);
-                  } finally {
-                    setSalvandoPerfil(false);
-                  }
-                }}
-              >
-                <div className="profile-grid">
-                  <label className="profile-field profile-field--full">
-                    <span>Foto do perfil</span>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      disabled={salvandoPerfil}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFotoArquivo(file);
-                        setFotoPreview(file ? URL.createObjectURL(file) : null);
+                          const novo = { ...(perfil || {}), ...(usuarioAtualizado || payload) };
+                          setPerfil(novo);
+                          setJSONStorage(chavesSessao.participanteLogado, novo);
+                          fecharModalEditarPerfil();
+                          setModalSucessoTexto("Perfil atualizado com sucesso.");
+                          setModalSucessoAberto(true);
+                        } catch (err) {
+                          const error = err as Error;
+                          setMsgPerfil(`Não foi possível salvar: ${error.message}`);
+                        } finally {
+                          setSalvandoPerfil(false);
+                        }
                       }}
-                    />
-                    <small className="profile-hint">
-                      Selecione uma imagem (JPG, PNG ou WEBP). O upload acontece ao clicar em
-                      “Salvar”.
-                    </small>
-                    {(fotoPreview || montarUrlFoto(perfil?.fotoPerfil)) ? (
-                      <div style={{ marginTop: 10 }}>
-                        <img
-                          src={(fotoPreview || (montarUrlFoto(perfil?.fotoPerfil) as string)) as string}
-                          alt="Prévia da foto do perfil"
-                          style={{
-                            width: 140,
-                            height: 140,
-                            borderRadius: 999,
-                            objectFit: "cover"
-                          }}
-                        />
-                      </div>
-                    ) : null}
-                  </label>
-
-                  <label className="profile-field">
-                    <span>Nome</span>
-                    <input
-                      value={formPerfil.nome}
-                      onChange={(e) => setFormPerfil((p) => ({ ...p, nome: e.target.value }))}
-                      required
-                      disabled={salvandoPerfil}
-                    />
-                  </label>
-
-                  <label className="profile-field">
-                    <span>Contato</span>
-                    <input
-                      value={formatarTelefoneBR(formPerfil.contato)}
-                      onChange={(e) =>
-                        setFormPerfil((p) => ({
-                          ...p,
-                          contato: formatarTelefoneBR(e.target.value)
-                        }))
-                      }
-                      placeholder="(xx) xxxxx-xxxx"
-                      disabled={salvandoPerfil}
-                    />
-                  </label>
-
-                  <label className="profile-field">
-                    <span>Data de nascimento</span>
-                    <input
-                      type="date"
-                      value={
-                        formPerfil.dataNascimento
-                          ? String(formPerfil.dataNascimento).slice(0, 10)
-                          : ""
-                      }
-                      onChange={(e) =>
-                        setFormPerfil((p) => ({ ...p, dataNascimento: e.target.value }))
-                      }
-                      disabled={salvandoPerfil}
-                    />
-                  </label>
-
-                  <label className="profile-field">
-                    <span>Sexo</span>
-                    <select
-                      value={formPerfil.sexo}
-                      onChange={(e) => setFormPerfil((p) => ({ ...p, sexo: e.target.value }))}
-                      disabled={salvandoPerfil}
                     >
-                      <option value="">—</option>
-                      <option value="MASCULINO">Masculino</option>
-                      <option value="FEMININO">Feminino</option>
-                    </select>
-                  </label>
-                </div>
+                      {msgPerfil ? (
+                        <div className="auth-banner auth-banner--info">{msgPerfil}</div>
+                      ) : null}
 
-                <div className="dash-card-actions">
-                  <button type="submit" className="dash-pill" disabled={salvandoPerfil}>
-                    {salvandoPerfil ? "Salvando..." : "Salvar"}
-                  </button>
+                      <div className="flex flex-col flex-wrap gap-4 sm:flex-row">
+                        <label className="flex w-full min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:basis-full">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                            Foto do perfil
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            disabled={salvandoPerfil}
+                            className="w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 py-2 font-semibold text-[#203667]/90 shadow-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[#F39200]/15 file:px-3 file:py-2 file:font-black file:text-[#203667] hover:file:bg-[#F39200]/25"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setFotoArquivo(file);
+                              setFotoPreview(file ? URL.createObjectURL(file) : null);
+                            }}
+                          />
+                          <small className="text-[0.82rem] leading-snug text-[#203667]/70">
+                            Selecione uma imagem (JPG, PNG ou WEBP). O upload acontece ao clicar em
+                            “Salvar”.
+                          </small>
+                          {fotoPreview || montarUrlFoto(perfil?.fotoPerfil) ? (
+                            <div className="mt-2.5">
+                              <img
+                                src={
+                                  (fotoPreview || (montarUrlFoto(perfil?.fotoPerfil) as string)) as string
+                                }
+                                alt="Prévia da foto do perfil"
+                                className="h-[132px] w-[132px] rounded-2xl border border-[#FFFFFF] object-cover shadow-[0_16px_40px_rgba(32,54,103,0.14)] ring-1 ring-[#203667]/10"
+                              />
+                            </div>
+                          ) : null}
+                        </label>
+
+                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                            Nome
+                          </span>
+                          <input
+                            value={formPerfil.nome}
+                            onChange={(e) => setFormPerfil((p) => ({ ...p, nome: e.target.value }))}
+                            required
+                            disabled={salvandoPerfil}
+                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                          />
+                        </label>
+
+                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                            Contato
+                          </span>
+                          <input
+                            value={formatarTelefoneBR(formPerfil.contato)}
+                            onChange={(e) =>
+                              setFormPerfil((p) => ({
+                                ...p,
+                                contato: formatarTelefoneBR(e.target.value)
+                              }))
+                            }
+                            placeholder="(xx) xxxxx-xxxx"
+                            disabled={salvandoPerfil}
+                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                          />
+                        </label>
+
+                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                            Data de nascimento
+                          </span>
+                          <input
+                            type="date"
+                            value={
+                              formPerfil.dataNascimento
+                                ? String(formPerfil.dataNascimento).slice(0, 10)
+                                : ""
+                            }
+                            onChange={(e) =>
+                              setFormPerfil((p) => ({ ...p, dataNascimento: e.target.value }))
+                            }
+                            disabled={salvandoPerfil}
+                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                          />
+                        </label>
+
+                        <label className="flex min-w-0 flex-[1_1_100%] flex-col gap-1.5 sm:flex-[1_1_calc(50%-0.5rem)]">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-[#203667]/80">
+                            Sexo
+                          </span>
+                          <select
+                            value={formPerfil.sexo}
+                            onChange={(e) => setFormPerfil((p) => ({ ...p, sexo: e.target.value }))}
+                            disabled={salvandoPerfil}
+                            className="h-11 w-full rounded-xl border border-[#203667]/14 bg-[#FFFFFF] px-3 font-semibold text-[#203667] shadow-sm outline-none focus-visible:border-[#F39200]/60 focus-visible:ring-4 focus-visible:ring-[#F39200]/28 disabled:opacity-70"
+                          >
+                            <option value="">—</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMININO">Feminino</option>
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-wrap justify-end gap-2.5 border-t border-[#203667]/10 pt-4">
+                        <button
+                          type="button"
+                          onClick={fecharModalEditarPerfil}
+                          disabled={salvandoPerfil}
+                          className="inline-flex items-center justify-center rounded-full border border-[#203667]/20 bg-[#FFFFFF] px-5 py-2.5 font-black text-[#203667] shadow-sm transition hover:bg-[#203667]/[0.06] disabled:opacity-70"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-full border border-[#F39200]/40 bg-gradient-to-r from-[#F39200] to-[#E44631] px-5 py-2.5 font-black text-[#FFFFFF] shadow-[0_14px_30px_rgba(228,70,49,0.25)] transition hover:brightness-[1.03] disabled:cursor-not-allowed disabled:opacity-70"
+                          disabled={salvandoPerfil}
+                        >
+                          {salvandoPerfil ? "Salvando..." : "Salvar"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
-              </form>
-            )}
+              ) : null}
+            </div>
           </article>
         </div>
       )}
