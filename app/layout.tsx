@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sistema de Campeonato de Vôlei",
-  description: "Frontend (Next) do sistema de campeonato de vôlei"
+  title: "Vôlei Club Jampa",
+  description: "Participe. Compita. Supere seus limites."
 };
 
 export default function RootLayout({
