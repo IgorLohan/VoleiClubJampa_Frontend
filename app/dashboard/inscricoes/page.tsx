@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
 import PageLoader from "@/components/PageLoader";
 import {
+  API_BASE,
   aprovarInscricaoIndividual,
   atualizarInscricaoIndividual,
   buscarResumoCampeonato,
@@ -17,7 +18,8 @@ import {
   Check,
   FileImage,
   Pencil,
-  Trash2
+  Trash2,
+  UserRound
 } from "lucide-react";
 
 export default function DashboardCampeonatosPage() {
@@ -56,6 +58,55 @@ function formatarDinheiroCentavos(valor: number | null | undefined) {
   return (v / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function montarUrlFoto(fotoPerfil: string | null | undefined) {
+  if (!fotoPerfil) return null;
+  if (/^https?:\/\//i.test(fotoPerfil)) return fotoPerfil;
+  return `${API_BASE}${fotoPerfil.startsWith("/") ? "" : "/"}${fotoPerfil}`;
+}
+
+function CelulaFotoPerfilInscricao({
+  urlFoto,
+  nomeJogador,
+  onAbrir
+}: {
+  urlFoto: string | null;
+  nomeJogador: string;
+  onAbrir: (url: string, nome: string) => void;
+}) {
+  const [falhouCarregar, setFalhouCarregar] = useState(false);
+
+  useEffect(() => {
+    setFalhouCarregar(false);
+  }, [urlFoto]);
+
+  if (!urlFoto || falhouCarregar) {
+    return (
+      <span className="admin-inscricao-foto-placeholder" aria-label="Sem foto de perfil">
+        <UserRound size={20} aria-hidden />
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="admin-inscricao-foto-thumb-btn"
+      onClick={() => onAbrir(urlFoto, nomeJogador)}
+      title={`Ver foto de ${nomeJogador}`}
+      aria-label={`Ampliar foto de perfil de ${nomeJogador}`}
+    >
+      <img
+        src={urlFoto}
+        alt=""
+        className="admin-inscricao-foto-thumb"
+        width={44}
+        height={44}
+        onError={() => setFalhouCarregar(true)}
+      />
+    </button>
+  );
+}
+
 function InscricoesAdminPage() {
   const [mensagem, setMensagem] = useState("");
   const [campeonatos, setCampeonatos] = useState<Array<{ id: number; nome: string }>>([]);
@@ -70,6 +121,10 @@ function InscricoesAdminPage() {
   const [comprovanteModal, setComprovanteModal] = useState<{
     src: string;
     jogador: string;
+  } | null>(null);
+  const [fotoModal, setFotoModal] = useState<{
+    src: string;
+    nome: string;
   } | null>(null);
   const [reprovarAlvo, setReprovarAlvo] = useState<any | null>(null);
   const [reprovarObservacao, setReprovarObservacao] = useState("");
@@ -120,6 +175,15 @@ function InscricoesAdminPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [comprovanteModal]);
+
+  useEffect(() => {
+    if (!fotoModal) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setFotoModal(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fotoModal]);
 
   useEffect(() => {
     if (!reprovarAlvo) return;
@@ -302,6 +366,7 @@ function InscricoesAdminPage() {
               <thead>
                 <tr>
                   <th>Jogador</th>
+                  <th>Foto</th>
                   <th>E-mail</th>
                   <th>Contato</th>
                   <th>Status</th>
@@ -318,10 +383,19 @@ function InscricoesAdminPage() {
                     const cancelada = String(i?.status || "").toUpperCase() === "CANCELADA";
                     const usada = String(i?.status || "").toUpperCase() === "USADA_EM_EQUIPE";
                     const comprovante = String(i?.comprovantePagamento || "").trim();
+                    const urlFoto = montarUrlFoto(i.usuario?.fotoPerfil);
+                    const nomeJogador = String(i.usuario?.nome || "Jogador");
 
                     return (
                       <tr key={`individual-${i.id}`}>
                         <td data-label="Jogador">{i.usuario?.nome || "—"}</td>
+                        <td data-label="Foto">
+                          <CelulaFotoPerfilInscricao
+                            urlFoto={urlFoto}
+                            nomeJogador={nomeJogador}
+                            onAbrir={(url, nome) => setFotoModal({ src: url, nome })}
+                          />
+                        </td>
                         <td data-label="E-mail">{i.usuario?.email || "—"}</td>
                         <td data-label="Contato">{i.usuario?.contato?.trim?.() || "—"}</td>
                         <td data-label="Status">
@@ -414,7 +488,7 @@ function InscricoesAdminPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="campeonatos-empty">
+                    <td colSpan={8} className="campeonatos-empty">
                       Nenhuma inscrição individual encontrada.
                     </td>
                   </tr>
@@ -578,6 +652,52 @@ function InscricoesAdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {fotoModal ? (
+        <div
+          className="campeonatos-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Foto de perfil"
+          style={{ zIndex: 60 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setFotoModal(null);
+          }}
+        >
+          <div className="campeonatos-modal campeonatos-modal--full">
+            <div className="campeonatos-modal-head">
+              <div>
+                <div className="campeonatos-modal-title">Foto de perfil</div>
+                <div className="campeonatos-modal-name">{fotoModal.nome}</div>
+              </div>
+              <button
+                type="button"
+                className="campeonatos-modal-close"
+                onClick={() => setFotoModal(null)}
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="campeonatos-modal-scroll" style={{ display: "flex", justifyContent: "center" }}>
+              <img
+                src={fotoModal.src}
+                alt={`Foto de perfil de ${fotoModal.nome}`}
+                className="admin-comprovante-modal-img"
+              />
+            </div>
+            <div className="campeonatos-modal-actions">
+              <button
+                type="button"
+                className="campeonatos-btn campeonatos-btn--primary"
+                onClick={() => setFotoModal(null)}
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
