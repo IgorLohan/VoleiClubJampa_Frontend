@@ -90,6 +90,12 @@ export async function atualizarUsuarioAdmin(
   });
 }
 
+export async function excluirUsuarioAdmin(usuarioId: string | number) {
+  return fazerRequisicao(`/admin/usuarios/${usuarioId}`, {
+    method: "DELETE"
+  });
+}
+
 export async function cadastrarParticipante(dados: {
   nome: string;
   email: string;

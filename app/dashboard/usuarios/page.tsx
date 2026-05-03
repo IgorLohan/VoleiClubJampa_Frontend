@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
 import PageLoader from "@/components/PageLoader";
-import { atualizarUsuarioAdmin, listarUsuariosAdmin } from "@/lib/api";
-import { chavesSessao, getStorage } from "@/lib/sessao";
-import { Lock, Pencil, X } from "lucide-react";
+import {
+  API_BASE,
+  atualizarUsuarioAdmin,
+  excluirUsuarioAdmin,
+  listarUsuariosAdmin
+} from "@/lib/api";
+import { chavesSessao, getJSONStorage, getStorage } from "@/lib/sessao";
+import { Loader2, Lock, Pencil, Trash2, UserRound } from "lucide-react";
 
 /** Senha de acesso à área de gestão de usuários (apenas no cliente). */
 const SENHA_AREA_USUARIOS = "505050";
@@ -51,6 +56,65 @@ function traduzirPapel(papel: string | null | undefined) {
   return papel || "—";
 }
 
+function classeBadgePapel(papel: string | null | undefined) {
+  const u = String(papel || "").toUpperCase();
+  if (u === "ADMIN") return "minhas-inscricoes-badge--warn";
+  return "minhas-inscricoes-badge--neutral";
+}
+
+function classeBadgeEmailVerificado(ok: boolean) {
+  return ok ? "minhas-inscricoes-badge--ok" : "minhas-inscricoes-badge--muted";
+}
+
+function montarUrlFoto(fotoPerfil: string | null | undefined) {
+  if (!fotoPerfil) return null;
+  if (/^https?:\/\//i.test(fotoPerfil)) return fotoPerfil;
+  return `${API_BASE}${fotoPerfil.startsWith("/") ? "" : "/"}${fotoPerfil}`;
+}
+
+function CelulaFotoUsuario({
+  urlFoto,
+  nome,
+  onAbrir
+}: {
+  urlFoto: string | null;
+  nome: string;
+  onAbrir: (url: string, nome: string) => void;
+}) {
+  const [falhouCarregar, setFalhouCarregar] = useState(false);
+
+  useEffect(() => {
+    setFalhouCarregar(false);
+  }, [urlFoto]);
+
+  if (!urlFoto || falhouCarregar) {
+    return (
+      <span className="admin-inscricao-foto-placeholder" aria-label="Sem foto de perfil">
+        <UserRound size={20} aria-hidden />
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="admin-inscricao-foto-thumb-btn"
+      onClick={() => onAbrir(urlFoto, nome)}
+      title={`Ver foto de ${nome}`}
+      aria-label={`Ampliar foto de perfil de ${nome}`}
+    >
+      <img
+        src={urlFoto}
+        alt=""
+        className="admin-inscricao-foto-thumb"
+        width={44}
+        height={44}
+        onError={() => setFalhouCarregar(true)}
+      />
+    </button>
+  );
+}
+
 function UsuariosAdminPage() {
   const router = useRouter();
   const [areaDesbloqueada, setAreaDesbloqueada] = useState(false);
@@ -61,6 +125,8 @@ function UsuariosAdminPage() {
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [fotoModal, setFotoModal] = useState<{ src: string; nome: string } | null>(null);
   const [edicao, setEdicao] = useState<UsuarioAdmin | null>(null);
   const [form, setForm] = useState({
     nome: "",
@@ -73,6 +139,27 @@ function UsuariosAdminPage() {
     emailVerificado: false,
     novaSenha: ""
   });
+
+  const emailAdminLogado = useMemo(() => {
+    const s = getJSONStorage<{ email?: string }>(chavesSessao.adminLogado);
+    return (s?.email || "").trim().toLowerCase();
+  }, []);
+
+  const motivoBloqueioExclusao = useCallback(
+    (u: UsuarioAdmin): string | null => {
+      if (emailAdminLogado && u.email.trim().toLowerCase() === emailAdminLogado) {
+        return "Você não pode excluir o próprio usuário.";
+      }
+      if (u.papel === "ADMIN") {
+        const qtdAdmins = usuarios.filter((x) => x.papel === "ADMIN").length;
+        if (qtdAdmins <= 1) {
+          return "Não é possível excluir o único administrador do sistema.";
+        }
+      }
+      return null;
+    },
+    [emailAdminLogado, usuarios]
+  );
 
   const recarregar = useCallback(async () => {
     setMensagem("");
@@ -106,6 +193,22 @@ function UsuariosAdminPage() {
     window.addEventListener("voleiclub:usuarios-requer-senha", exigirSenhaNovamente);
     return () => window.removeEventListener("voleiclub:usuarios-requer-senha", exigirSenhaNovamente);
   }, []);
+
+  useEffect(() => {
+    if (!fotoModal) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setFotoModal(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fotoModal]);
+
+  const totalAdmins = useMemo(
+    () => usuarios.filter((u) => String(u.papel).toUpperCase() === "ADMIN").length,
+    [usuarios]
+  );
+
+  const acoesBloqueadas = excluindoId !== null;
 
   function onConfirmarSenhaGate(e: React.FormEvent) {
     e.preventDefault();
@@ -172,6 +275,34 @@ function UsuariosAdminPage() {
       setMensagem(error.message || "Erro ao salvar.");
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function onExcluir(u: UsuarioAdmin) {
+    const bloqueio = motivoBloqueioExclusao(u);
+    if (bloqueio) {
+      setMensagem(bloqueio);
+      return;
+    }
+
+    const ok = window.confirm(
+      `Excluir permanentemente o usuário “${u.nome}” (${u.email})? Esta ação não pode ser desfeita.`
+    );
+    if (!ok) return;
+
+    setExcluindoId(u.id);
+    setMensagem("");
+    try {
+      await excluirUsuarioAdmin(u.id);
+      if (edicao?.id === u.id) {
+        fecharEdicao();
+      }
+      await recarregar();
+    } catch (err) {
+      const error = err as Error;
+      setMensagem(error.message || "Erro ao excluir usuário.");
+    } finally {
+      setExcluindoId(null);
     }
   }
 
@@ -252,237 +383,374 @@ function UsuariosAdminPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: 1100 }}>
-      <header className="cabecalho topo-inicio" style={{ marginBottom: 16 }}>
-        <h1 style={{ marginBottom: 8 }}>Usuários</h1>
-        <p style={{ margin: 0, opacity: 0.9 }}>
-          Gerencie cadastros: edição de dados, papel, verificação de e-mail e redefinição de senha.
-          Exclusão de conta não está disponível.
+    <div style={{ display: "grid", gap: 14 }}>
+      <section className="card" aria-label="Lista de usuários">
+        <h2 style={{ margin: 0 }}>Usuários</h2>
+        <p style={{ marginTop: 8, color: "rgba(11, 18, 32, 0.68)", fontWeight: 700 }}>
+          Cadastros do sistema: edição, papel, e-mail verificado, senha e exclusão irreversível. Não é
+          possível excluir a si mesmo nem o único administrador.
         </p>
-      </header>
+        <p className="info-auxiliar" style={{ marginTop: 10, marginBottom: 0 }}>
+          <strong>Total:</strong> {usuarios.length} cadastro(s) · <strong>Administradores:</strong>{" "}
+          {totalAdmins}
+        </p>
+
+        {carregando && usuarios.length > 0 ? (
+          <PageLoader label="Atualizando lista" variant="section" />
+        ) : null}
 
         {mensagem && !edicao ? (
-        <p role="alert" style={{ marginBottom: 12, color: "var(--cor-erro, #c62828)" }}>
-          {mensagem}
-        </p>
-      ) : null}
+          <p
+            role="alert"
+            className="admin-dash-help"
+            style={{ marginTop: 12, color: "var(--cor-erro, #c62828)", fontWeight: 800 }}
+          >
+            {mensagem}
+          </p>
+        ) : null}
 
-      <div className="campeonatos-table-wrap">
-        <table className="campeonatos-table" aria-label="Lista de usuários">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Login admin</th>
-              <th>Papel</th>
-              <th>E-mail verificado</th>
-              <th>Cadastro</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!usuarios.length ? (
+        <div className="campeonatos-table-wrap" style={{ marginTop: 14 }}>
+          <table className="campeonatos-table" aria-label="Usuários cadastrados">
+            <thead>
               <tr>
-                <td colSpan={7} className="campeonatos-empty">
-                  Nenhum usuário encontrado.
-                </td>
+                <th>Nome</th>
+                <th>Foto</th>
+                <th>E-mail</th>
+                <th>Login admin</th>
+                <th>Papel</th>
+                <th>E-mail verif.</th>
+                <th>Cadastro</th>
+                <th style={{ textAlign: "right" }}>Ações</th>
               </tr>
-            ) : (
-              usuarios.map((u) => (
-                <tr key={u.id}>
-                  <td className="campeonatos-name">{u.nome}</td>
-                  <td>{u.email}</td>
-                  <td>{u.loginAdmin || "—"}</td>
-                  <td>{traduzirPapel(u.papel)}</td>
-                  <td>{u.emailVerificado ? "Sim" : "Não"}</td>
-                  <td>{formatarDataCurta(u.criadoEm)}</td>
-                  <td className="campeonatos-actions">
-                    <button
-                      type="button"
-                      className="botao-pequeno"
-                      onClick={() => abrirEdicao(u)}
-                    >
-                      <Pencil size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />
-                      Editar
-                    </button>
+            </thead>
+            <tbody>
+              {!usuarios.length ? (
+                <tr>
+                  <td colSpan={8} className="campeonatos-empty">
+                    Nenhum usuário encontrado.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                usuarios.map((u) => {
+                  const excluindoEste = excluindoId === u.id;
+                  const bloqueioExcluir = motivoBloqueioExclusao(u);
+                  const urlFoto = montarUrlFoto(u.fotoPerfil);
+                  const nomeExibicao = u.nome || "Usuário";
+
+                  return (
+                    <tr key={u.id}>
+                      <td className="campeonatos-name" data-label="Nome">
+                        {nomeExibicao}
+                      </td>
+                      <td data-label="Foto">
+                        <CelulaFotoUsuario
+                          urlFoto={urlFoto}
+                          nome={nomeExibicao}
+                          onAbrir={(url, nome) => setFotoModal({ src: url, nome })}
+                        />
+                      </td>
+                      <td data-label="E-mail">{u.email}</td>
+                      <td data-label="Login admin">{u.loginAdmin || "—"}</td>
+                      <td data-label="Papel">
+                        <span
+                          className={`minhas-inscricoes-badge ${classeBadgePapel(u.papel)}`}
+                        >
+                          {traduzirPapel(u.papel)}
+                        </span>
+                      </td>
+                      <td data-label="E-mail verif.">
+                        <span
+                          className={`minhas-inscricoes-badge ${classeBadgeEmailVerificado(
+                            Boolean(u.emailVerificado)
+                          )}`}
+                        >
+                          {u.emailVerificado ? "Verificado" : "Pendente"}
+                        </span>
+                      </td>
+                      <td data-label="Cadastro">{formatarDataCurta(u.criadoEm)}</td>
+                      <td
+                        data-label="Ações"
+                        style={{ textAlign: "right", whiteSpace: "nowrap" }}
+                      >
+                        <div style={{ display: "inline-flex", gap: 8, justifyContent: "flex-end" }}>
+                          <button
+                            type="button"
+                            className="campeonatos-action campeonatos-action--icon"
+                            onClick={() => abrirEdicao(u)}
+                            disabled={acoesBloqueadas}
+                            title="Editar"
+                            aria-label={`Editar ${nomeExibicao}`}
+                          >
+                            <Pencil aria-hidden className="campeonatos-action-icon" />
+                          </button>
+                          <button
+                            type="button"
+                            className="campeonatos-action campeonatos-action--icon"
+                            onClick={() => onExcluir(u)}
+                            disabled={
+                              Boolean(bloqueioExcluir) || acoesBloqueadas || excluindoEste
+                            }
+                            title={bloqueioExcluir || "Excluir permanentemente"}
+                            aria-label={`Excluir ${nomeExibicao}`}
+                            aria-busy={excluindoEste}
+                          >
+                            {excluindoEste ? (
+                              <Loader2
+                                aria-hidden
+                                className="campeonatos-action-icon campeonatos-acao-loader"
+                              />
+                            ) : (
+                              <Trash2 aria-hidden className="campeonatos-action-icon" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {edicao ? (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 80,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16
-          }}
+          className="campeonatos-modal-backdrop"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-usuario-titulo"
+          style={{ zIndex: 80 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !salvando) fecharEdicao();
+          }}
         >
-          <div
-            className="card"
-            style={{
-              width: "min(520px, 100%)",
-              maxHeight: "90vh",
-              overflow: "auto",
-              position: "relative"
-            }}
-          >
-            <button
-              type="button"
-              className="dash-topbar-icon"
-              onClick={fecharEdicao}
-              aria-label="Fechar"
-              style={{ position: "absolute", top: 12, right: 12 }}
-            >
-              <X size={20} />
-            </button>
+          <div className="campeonatos-modal" style={{ width: "min(520px, calc(100vw - 32px))" }}>
+            <div className="campeonatos-modal-head">
+              <div>
+                <div className="campeonatos-modal-title" id="modal-usuario-titulo">
+                  Editar usuário
+                </div>
+                <div className="campeonatos-modal-name">
+                  ID {edicao.id} · {edicao.nome}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="campeonatos-modal-close"
+                onClick={fecharEdicao}
+                aria-label="Fechar"
+                disabled={salvando}
+              >
+                ✕
+              </button>
+            </div>
 
-            <h2 id="modal-usuario-titulo" style={{ marginTop: 0, paddingRight: 40 }}>
-              Editar usuário
-            </h2>
-            <p style={{ marginTop: 0, opacity: 0.85, fontSize: "0.9rem" }}>
-              ID {edicao.id} · Exclusão de usuário não é permitida nesta tela.
+            <p className="info-auxiliar" style={{ margin: 0 }}>
+              Para excluir, feche este painel e use o ícone da lixeira na tabela.
             </p>
 
             {mensagem ? (
-              <p role="alert" style={{ color: "var(--cor-erro, #c62828)", marginBottom: 12 }}>
+              <p role="alert" style={{ color: "var(--cor-erro, #c62828)", margin: 0, fontWeight: 700 }}>
                 {mensagem}
               </p>
             ) : null}
 
-            <form onSubmit={onSalvar} className="formulario-edicao-inscricao">
-              <div className="grupo-formulario">
-                <label htmlFor="usu-nome">Nome</label>
-                <input
-                  id="usu-nome"
-                  value={form.nome}
-                  onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="grupo-formulario">
-                <label htmlFor="usu-email">E-mail</label>
-                <input
-                  id="usu-email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="grupo-formulario">
-                <label htmlFor="usu-papel">Papel</label>
-                <select
-                  id="usu-papel"
-                  value={form.papel}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      papel: e.target.value as "ADMIN" | "PARTICIPANTE"
-                    }))
-                  }
-                >
-                  <option value="PARTICIPANTE">Participante</option>
-                  <option value="ADMIN">Administrador</option>
-                </select>
-              </div>
-              {form.papel === "ADMIN" ? (
+            <form onSubmit={onSalvar} className="campeonatos-modal-section">
+              <div className="formulario-edicao-inscricao">
                 <div className="grupo-formulario">
-                  <label htmlFor="usu-login-admin">Login administrativo</label>
+                  <label htmlFor="usu-nome">Nome</label>
                   <input
-                    id="usu-login-admin"
-                    value={form.loginAdmin}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, loginAdmin: e.target.value }))
-                    }
-                    placeholder="Usado no acesso dedicado ao painel"
-                    required={form.papel === "ADMIN"}
+                    id="usu-nome"
+                    value={form.nome}
+                    onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
+                    required
+                    disabled={salvando}
                   />
                 </div>
-              ) : null}
-              <div className="grupo-formulario">
-                <label htmlFor="usu-contato">Contato</label>
-                <input
-                  id="usu-contato"
-                  value={form.contato}
-                  onChange={(e) => setForm((p) => ({ ...p, contato: e.target.value }))}
-                />
-              </div>
-              <div className="grupo-formulario">
-                <label htmlFor="usu-nasc">Data de nascimento</label>
-                <input
-                  id="usu-nasc"
-                  type="date"
-                  value={form.dataNascimento}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, dataNascimento: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="grupo-formulario">
-                <label htmlFor="usu-sexo">Sexo (perfil)</label>
-                <select
-                  id="usu-sexo"
-                  value={form.sexo}
-                  onChange={(e) => setForm((p) => ({ ...p, sexo: e.target.value }))}
-                >
-                  <option value="">—</option>
-                  <option value="MASCULINO">Masculino</option>
-                  <option value="FEMININO">Feminino</option>
-                  <option value="OUTRO">Outro</option>
-                  <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
-                </select>
-              </div>
-              <div className="grupo-formulario">
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div className="grupo-formulario">
+                  <label htmlFor="usu-email">E-mail</label>
                   <input
-                    type="checkbox"
-                    checked={form.emailVerificado}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, emailVerificado: e.target.checked }))
-                    }
+                    id="usu-email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                    required
+                    disabled={salvando}
                   />
-                  E-mail verificado
-                </label>
+                </div>
+                <div className="grupo-formulario">
+                  <label htmlFor="usu-papel">Papel</label>
+                  <select
+                    id="usu-papel"
+                    value={form.papel}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        papel: e.target.value as "ADMIN" | "PARTICIPANTE"
+                      }))
+                    }
+                    disabled={salvando}
+                  >
+                    <option value="PARTICIPANTE">Participante</option>
+                    <option value="ADMIN">Administrador</option>
+                  </select>
+                </div>
+                {form.papel === "ADMIN" ? (
+                  <div className="grupo-formulario">
+                    <label htmlFor="usu-login-admin">Login administrativo</label>
+                    <input
+                      id="usu-login-admin"
+                      value={form.loginAdmin}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, loginAdmin: e.target.value }))
+                      }
+                      placeholder="Usado no acesso dedicado ao painel"
+                      required={form.papel === "ADMIN"}
+                      disabled={salvando}
+                    />
+                  </div>
+                ) : null}
+                <div className="grupo-formulario">
+                  <label htmlFor="usu-contato">Contato</label>
+                  <input
+                    id="usu-contato"
+                    value={form.contato}
+                    onChange={(e) => setForm((p) => ({ ...p, contato: e.target.value }))}
+                    disabled={salvando}
+                  />
+                </div>
+                <div className="grupo-formulario">
+                  <label htmlFor="usu-nasc">Data de nascimento</label>
+                  <input
+                    id="usu-nasc"
+                    type="date"
+                    value={form.dataNascimento}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, dataNascimento: e.target.value }))
+                    }
+                    disabled={salvando}
+                  />
+                </div>
+                <div className="grupo-formulario">
+                  <label htmlFor="usu-sexo">Sexo (perfil)</label>
+                  <select
+                    id="usu-sexo"
+                    value={form.sexo}
+                    onChange={(e) => setForm((p) => ({ ...p, sexo: e.target.value }))}
+                    disabled={salvando}
+                  >
+                    <option value="">—</option>
+                    <option value="MASCULINO">Masculino</option>
+                    <option value="FEMININO">Feminino</option>
+                    <option value="OUTRO">Outro</option>
+                    <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
+                  </select>
+                </div>
+                <div className="grupo-formulario">
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={form.emailVerificado}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, emailVerificado: e.target.checked }))
+                      }
+                      disabled={salvando}
+                    />
+                    E-mail verificado
+                  </label>
+                </div>
+                <div className="grupo-formulario">
+                  <label htmlFor="usu-senha">Nova senha (opcional)</label>
+                  <input
+                    id="usu-senha"
+                    type="password"
+                    autoComplete="new-password"
+                    value={form.novaSenha}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, novaSenha: e.target.value }))
+                    }
+                    placeholder="Deixe em branco para não alterar"
+                    disabled={salvando}
+                  />
+                </div>
               </div>
-              <div className="grupo-formulario">
-                <label htmlFor="usu-senha">Nova senha (opcional)</label>
-                <input
-                  id="usu-senha"
-                  type="password"
-                  autoComplete="new-password"
-                  value={form.novaSenha}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, novaSenha: e.target.value }))
-                  }
-                  placeholder="Deixe em branco para não alterar"
-                />
-              </div>
-              <div className="acoes-card" style={{ marginTop: 12 }}>
-                <button type="submit" className="botao-pequeno" disabled={salvando}>
-                  {salvando ? "Salvando…" : "Salvar"}
-                </button>
+
+              <div className="campeonatos-modal-actions">
                 <button
                   type="button"
-                  className="botao-pequeno secundario"
+                  className="campeonatos-btn campeonatos-btn--ghost"
                   onClick={fecharEdicao}
                   disabled={salvando}
                 >
                   Cancelar
                 </button>
+                <button
+                  type="submit"
+                  className={`campeonatos-btn campeonatos-btn--primary${salvando ? " campeonatos-btn--with-loader" : ""}`}
+                  disabled={salvando}
+                  aria-busy={salvando}
+                >
+                  {salvando ? (
+                    <>
+                      <Loader2 aria-hidden className="campeonatos-modal-btn-loader" />
+                      Salvando…
+                    </>
+                  ) : (
+                    "Salvar"
+                  )}
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {fotoModal ? (
+        <div
+          className="campeonatos-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Foto de perfil"
+          style={{ zIndex: 85 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setFotoModal(null);
+          }}
+        >
+          <div className="campeonatos-modal campeonatos-modal--full">
+            <div className="campeonatos-modal-head">
+              <div>
+                <div className="campeonatos-modal-title">Foto de perfil</div>
+                <div className="campeonatos-modal-name">{fotoModal.nome}</div>
+              </div>
+              <button
+                type="button"
+                className="campeonatos-modal-close"
+                onClick={() => setFotoModal(null)}
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              className="campeonatos-modal-scroll"
+              style={{ display: "flex", justifyContent: "center" }}
+            >
+              <img
+                src={fotoModal.src}
+                alt={`Foto de perfil de ${fotoModal.nome}`}
+                className="admin-comprovante-modal-img"
+              />
+            </div>
+            <div className="campeonatos-modal-actions">
+              <button
+                type="button"
+                className="campeonatos-btn campeonatos-btn--primary"
+                onClick={() => setFotoModal(null)}
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
