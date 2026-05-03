@@ -279,6 +279,7 @@ export default function DashboardPage() {
     const lista = (resumoSelecionado?.inscricoesIndividuais || []) as any[];
     const base = { P: 0, M: 0, G: 0, GG: 0 } as Record<string, number>;
     for (const i of lista) {
+      if (i?.status === "CANCELADA" || i?.statusAnalise !== "APROVADA") continue;
       const t = i?.tamanhoCamisa;
       if (t && base[t] !== undefined) base[t] += 1;
     }
@@ -407,14 +408,14 @@ export default function DashboardPage() {
           ) : null}
 
           {campeonatoSelecionado && metricas.modoIndividual ? (
-            <section className="shirt-sizes" aria-label="Tamanhos de camisa">
+            <section className="shirt-sizes" aria-label="Tamanhos de camisa (inscrições aprovadas)">
               <h2 className="shirt-sizes-title">Tamanhos de camisa</h2>
               <div className="shirt-sizes-grid">
                 {(["P", "M", "G", "GG"] as const).map((t) => (
                   <article key={t} className="shirt-mini">
                     <div className="shirt-mini-size">{t}</div>
                     <div className="shirt-mini-qty">{camisetas[t]}</div>
-                    <div className="shirt-mini-sub">inscrições</div>
+                    <div className="shirt-mini-sub">aprovadas</div>
                   </article>
                 ))}
               </div>
