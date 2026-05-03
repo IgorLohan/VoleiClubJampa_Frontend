@@ -818,6 +818,38 @@ body {
   text-align: center;
 }
 
+/* Inscrições admin: coluna só de aprovar / reprovar */
+.campeonatos-inscricao-decisao-btns {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.campeonatos-inscricao-decisao-feito {
+  display: inline-block;
+  min-width: 1.25rem;
+  color: rgba(11, 18, 32, 0.32);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.campeonatos-acao-loader {
+  animation: page-loader-spin 0.75s linear infinite;
+}
+
+.campeonatos-btn--with-loader {
+  gap: 8px;
+}
+
+.campeonatos-modal-btn-loader {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  animation: page-loader-spin 0.75s linear infinite;
+}
+
 .campeonatos-modal-backdrop {
   position: fixed;
   inset: 0;

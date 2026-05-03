@@ -17,6 +17,7 @@ import {
   Ban,
   Check,
   FileImage,
+  Loader2,
   Pencil,
   Trash2,
   UserRound
@@ -313,6 +314,9 @@ function InscricoesAdminPage() {
     }
   }
 
+  const reprovandoNoModal =
+    reprovarAlvo != null && acaoEmAndamento === `reprovar-${reprovarAlvo.id}`;
+
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <section className="admin-dash-select" aria-label="Filtros de inscrições">
@@ -372,6 +376,7 @@ function InscricoesAdminPage() {
                   <th>Status</th>
                   <th>Camisa</th>
                   <th>Valor</th>
+                  <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Aprovação</th>
                   <th style={{ textAlign: "right" }}>Ações</th>
                 </tr>
               </thead>
@@ -385,6 +390,7 @@ function InscricoesAdminPage() {
                     const comprovante = String(i?.comprovantePagamento || "").trim();
                     const urlFoto = montarUrlFoto(i.usuario?.fotoPerfil);
                     const nomeJogador = String(i.usuario?.nome || "Jogador");
+                    const aprovandoEste = acaoEmAndamento === `aprovar-${i.id}`;
 
                     return (
                       <tr key={`individual-${i.id}`}>
@@ -409,32 +415,57 @@ function InscricoesAdminPage() {
                         </td>
                         <td data-label="Camisa">{i.tamanhoCamisa || "—"}</td>
                         <td data-label="Valor">{formatarDinheiroCentavos(i.valorTotalCentavos)}</td>
+                        <td
+                          data-label="Aprovação"
+                          className="campeonatos-inscricao-decisao"
+                          style={{ textAlign: "center" }}
+                        >
+                          <div className="campeonatos-inscricao-decisao-btns">
+                            {aprovada || reprovada ? (
+                              <span
+                                className="campeonatos-inscricao-decisao-feito"
+                                aria-label="Decisão já registrada"
+                              >
+                                —
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  className="campeonatos-action campeonatos-action--icon campeonatos-action--primary"
+                                  onClick={() => onAprovar(i)}
+                                  disabled={acaoEmAndamento !== null || cancelada || usada}
+                                  title={aprovandoEste ? "Aprovando…" : "Aprovar"}
+                                  aria-label={aprovandoEste ? "Aprovando…" : "Aprovar"}
+                                  aria-busy={aprovandoEste}
+                                >
+                                  {aprovandoEste ? (
+                                    <Loader2
+                                      aria-hidden
+                                      className="campeonatos-action-icon campeonatos-acao-loader"
+                                    />
+                                  ) : (
+                                    <Check aria-hidden className="campeonatos-action-icon" />
+                                  )}
+                                </button>
+                                {!usada && !cancelada ? (
+                                  <button
+                                    type="button"
+                                    className="campeonatos-action campeonatos-action--icon"
+                                    onClick={() => abrirReprovar(i)}
+                                    disabled={acaoEmAndamento !== null}
+                                    title="Reprovar inscrição"
+                                    aria-label="Reprovar inscrição"
+                                  >
+                                    <Ban aria-hidden className="campeonatos-action-icon" />
+                                  </button>
+                                ) : null}
+                              </>
+                            )}
+                          </div>
+                        </td>
                         <td data-label="Ações" style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                           <div style={{ display: "inline-flex", gap: 8 }}>
-                            {!aprovada && !reprovada ? (
-                              <button
-                                type="button"
-                                className="campeonatos-action campeonatos-action--icon campeonatos-action--primary"
-                                onClick={() => onAprovar(i)}
-                                disabled={acaoEmAndamento !== null || cancelada || usada}
-                                title="Aprovar"
-                                aria-label="Aprovar"
-                              >
-                                <Check aria-hidden className="campeonatos-action-icon" />
-                              </button>
-                            ) : null}
-                            {!aprovada && !reprovada && !usada && !cancelada ? (
-                              <button
-                                type="button"
-                                className="campeonatos-action campeonatos-action--icon"
-                                onClick={() => abrirReprovar(i)}
-                                disabled={acaoEmAndamento !== null}
-                                title="Reprovar inscrição"
-                                aria-label="Reprovar inscrição"
-                              >
-                                <Ban aria-hidden className="campeonatos-action-icon" />
-                              </button>
-                            ) : null}
                             {comprovante ? (
                               <button
                                 type="button"
@@ -488,7 +519,7 @@ function InscricoesAdminPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={8} className="campeonatos-empty">
+                    <td colSpan={9} className="campeonatos-empty">
                       Nenhuma inscrição individual encontrada.
                     </td>
                   </tr>
@@ -507,7 +538,7 @@ function InscricoesAdminPage() {
           aria-label="Reprovar inscrição"
           style={{ zIndex: 55 }}
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) fecharReprovar();
+            if (e.target === e.currentTarget && !reprovandoNoModal) fecharReprovar();
           }}
         >
           <div className="campeonatos-modal">
@@ -523,6 +554,7 @@ function InscricoesAdminPage() {
                 className="campeonatos-modal-close"
                 onClick={fecharReprovar}
                 aria-label="Fechar"
+                disabled={reprovandoNoModal}
               >
                 ✕
               </button>
@@ -538,6 +570,7 @@ function InscricoesAdminPage() {
                   onChange={(e) => setReprovarObservacao(e.target.value)}
                   placeholder="Descreva o motivo (obrigatório)."
                   required
+                  disabled={reprovandoNoModal}
                 />
               </div>
 
@@ -546,16 +579,24 @@ function InscricoesAdminPage() {
                   type="button"
                   className="campeonatos-btn campeonatos-btn--ghost"
                   onClick={fecharReprovar}
-                  disabled={acaoEmAndamento !== null}
+                  disabled={reprovandoNoModal}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="campeonatos-btn campeonatos-btn--primary"
+                  className={`campeonatos-btn campeonatos-btn--primary${reprovandoNoModal ? " campeonatos-btn--with-loader" : ""}`}
                   disabled={acaoEmAndamento !== null}
+                  aria-busy={reprovandoNoModal}
                 >
-                  Reprovar
+                  {reprovandoNoModal ? (
+                    <>
+                      <Loader2 aria-hidden className="campeonatos-modal-btn-loader" />
+                      Reprovando…
+                    </>
+                  ) : (
+                    "Reprovar"
+                  )}
                 </button>
               </div>
             </form>
