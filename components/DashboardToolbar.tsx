@@ -12,7 +12,8 @@ import {
   Shield,
   Trophy,
   UserRound,
-  Users
+  Users,
+  UsersRound
 } from "lucide-react";
 
 export type PapelUsuario = "ADMIN" | "PARTICIPANTE";
@@ -46,7 +47,8 @@ export default function DashboardToolbar({
       campeonatos: "/dashboard/campeonatos",
       minhasInscricoes: "/dashboard/minhas-inscricoes",
       admin: "/dashboard/admin",
-      inscricoesAdmin: "/dashboard/inscricoes"
+      inscricoesAdmin: "/dashboard/inscricoes",
+      equipesAdmin: "/dashboard/equipes"
     };
   }, []);
 
@@ -151,6 +153,18 @@ export default function DashboardToolbar({
                     <ClipboardList size={18} />
                   </span>
                   <span className="dash-link-text">Inscrições</span>
+                </Link>
+                <Link
+                  href={rotas.equipesAdmin}
+                  className={`dash-link ${
+                    pathname.startsWith(rotas.equipesAdmin) ? "is-active" : ""
+                  }`}
+                  onClick={onNavegar}
+                >
+                  <span className="dash-link-icon" aria-hidden>
+                    <UsersRound size={18} />
+                  </span>
+                  <span className="dash-link-text">Equipes</span>
                 </Link>
               </>
             ) : (

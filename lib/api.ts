@@ -256,6 +256,22 @@ export async function criarInscricao(
   });
 }
 
+/** Inscrição de equipe manual pelo admin (modo por equipe no campeonato). */
+export async function criarInscricaoAdmin(
+  campeonatoId: string | number,
+  payload: {
+    nomeEquipe: string;
+    responsavel: string;
+    contato?: string | null;
+    jogadores: Array<{ nome: string; genero: "M" | "F" }>;
+  }
+) {
+  return fazerRequisicao(`/campeonatos/${campeonatoId}/inscricoes/admin`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
 /** Inscrição na tabela InscricaoIndividual (modo INDIVIDUAL no campeonato). */
 export async function criarInscricaoIndividual(
   campeonatoId: string | number,
