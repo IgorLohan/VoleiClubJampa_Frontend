@@ -35,6 +35,7 @@ type CampeonatoPublico = Record<string, any> & {
 type ResumoPublico = Record<string, any> & {
   campeonato: any;
   participantes: any[];
+  inscricoesIndividuais?: any[];
   jogos: any[];
   podio: any | null;
   totais: { participantes: number; jogos: number; jogosFinalizados: number };
@@ -104,6 +105,36 @@ function agruparJogosPorColunaMataMata(jogos: any[]) {
   return Object.entries(grupos).filter(([, lista]) => lista.length > 0);
 }
 
+function traduzirSexoUsuario(sexo: string | null | undefined) {
+  const s = String(sexo || "").toUpperCase();
+  if (s === "MASCULINO") return "Masculino";
+  if (s === "FEMININO") return "Feminino";
+  if (s === "OUTRO") return "Outro";
+  if (s === "PREFIRO_NAO_INFORMAR") return "Prefiro não informar";
+  return sexo || "—";
+}
+
+function traduzirGeneroJogador(genero: string | null | undefined) {
+  const g = String(genero || "").toUpperCase();
+  if (g === "M") return "Masculino";
+  if (g === "F") return "Feminino";
+  return genero || "—";
+}
+
+function traduzirStatusInscricaoIndividualLista(status: string | null | undefined) {
+  const s = String(status || "").toUpperCase();
+  if (s === "PENDENTE") return "Pendente de montagem";
+  if (s === "USADA_EM_EQUIPE") return "Alocado em equipe";
+  if (s === "CANCELADA") return "Cancelada";
+  return status || "—";
+}
+
+/** No resumo público, equipes já vêm apenas com inscrição aprovada. */
+function listaEquipesResumoPublico(participantes: any[] | undefined) {
+  if (!Array.isArray(participantes)) return [];
+  return participantes;
+}
+
 export default function CampeonatosPublicosPage() {
   const [mensagem, setMensagem] = useState("");
   const [lista, setLista] = useState<CampeonatoPublico[]>([]);
@@ -111,7 +142,7 @@ export default function CampeonatosPublicosPage() {
     null
   );
   const [abaDetalhes, setAbaDetalhes] = useState<
-    "RESUMO" | "PARTICIPANTES" | "CHAVE" | "JOGOS" | "PODIO"
+    "RESUMO" | "PARTICIPANTES" | "EQUIPES" | "CHAVE" | "JOGOS" | "PODIO"
   >("RESUMO");
   const [resumoAberto, setResumoAberto] = useState<{
     carregando: boolean;
@@ -430,6 +461,15 @@ export default function CampeonatosPublicosPage() {
                 <button
                   type="button"
                   role="tab"
+                  aria-selected={abaDetalhes === "EQUIPES"}
+                  className={`campeonatos-modal-tab ${abaDetalhes === "EQUIPES" ? "is-active" : ""}`}
+                  onClick={() => setAbaDetalhes("EQUIPES")}
+                >
+                  Equipes
+                </button>
+                <button
+                  type="button"
+                  role="tab"
                   aria-selected={abaDetalhes === "CHAVE"}
                   className={`campeonatos-modal-tab ${abaDetalhes === "CHAVE" ? "is-active" : ""}`}
                   onClick={() => setAbaDetalhes("CHAVE")}
@@ -553,27 +593,145 @@ export default function CampeonatosPublicosPage() {
                     <PageLoader label="Carregando participantes" variant="inline" />
                   ) : resumoAberto.erro ? (
                     <p className="campeonatos-msg">{resumoAberto.erro}</p>
-                  ) : !resumoAberto.dados?.participantes?.length ? (
-                    <p className="campeonatos-msg">Nenhum participante inscrito ainda.</p>
-                  ) : (
-                    <div className="campeonatos-modal-list">
-                      {resumoAberto.dados.participantes.map((p: any, idx: number) => (
-                        <div key={p.id ?? idx} className="campeonatos-modal-item">
-                          <div className="campeonatos-modal-item-title">{p.nomeEquipe}</div>
-                          <div className="campeonatos-modal-item-sub">
-                            <strong>Capitã(o):</strong> {p.responsavel}
-                          </div>
-                          {p.jogadores?.length ? (
-                            <ul className="campeonatos-modal-ul">
-                              {p.jogadores.map((j: any, jIdx: number) => (
-                                <li key={j.id ?? jIdx}>
-                                  {j.nome} ({j.genero})
-                                </li>
-                              ))}
-                            </ul>
+                  ) : !resumoAberto.dados ? (
+                    <p className="campeonatos-msg">Não foi possível carregar os dados.</p>
+                  ) : (() => {
+                      const dados = resumoAberto.dados;
+                      const individuais = dados.inscricoesIndividuais || [];
+                      const equipes = listaEquipesResumoPublico(dados.participantes);
+
+                      const jogadoresDeEquipes: Array<{
+                        equipeId: number | string;
+                        jogadorId: number | string;
+                        nome: string;
+                        genero: string;
+                        nomeEquipe: string;
+                      }> = [];
+
+                      for (const eq of equipes) {
+                        const nomeEq = eq.nomeEquipe || "Equipe";
+                        for (const j of eq.jogadores || []) {
+                          jogadoresDeEquipes.push({
+                            equipeId: eq.id ?? nomeEq,
+                            jogadorId: j.id ?? `${nomeEq}-${j.nome}`,
+                            nome: j.nome,
+                            genero: j.genero,
+                            nomeEquipe: nomeEq
+                          });
+                        }
+                      }
+
+                      const vazio = individuais.length === 0 && jogadoresDeEquipes.length === 0;
+
+                      if (vazio) {
+                        return (
+                          <p className="campeonatos-msg">
+                            Nenhum participante aprovado ainda. Inscrições individuais aparecem aqui
+                            após aprovação; em modo por equipe, os jogadores surgem quando a equipe
+                            estiver aprovada.
+                          </p>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: "grid", gap: 20 }}>
+                          {individuais.length > 0 ? (
+                            <div>
+                              <div className="campeonatos-modal-list">
+                                {individuais.map((i: any) => (
+                                  <div key={i.id} className="campeonatos-modal-item">
+                                    <div className="campeonatos-modal-item-title">
+                                      {i.usuario?.nome || "Participante"}
+                                    </div>
+                                    <div className="campeonatos-modal-item-sub">
+                                      <strong>Camisa:</strong> {i.tamanhoCamisa || "—"} ·{" "}
+                                      <strong>Sexo (perfil):</strong>{" "}
+                                      {traduzirSexoUsuario(i.usuario?.sexo)}
+                                    </div>
+                                    <div className="campeonatos-modal-item-sub">
+                                      <span className="minhas-inscricoes-badge minhas-inscricoes-badge--ok">
+                                        Inscrição aprovada
+                                      </span>{" "}
+                                      <span className="minhas-inscricoes-badge minhas-inscricoes-badge--neutral">
+                                        {traduzirStatusInscricaoIndividualLista(i.status)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {jogadoresDeEquipes.length > 0 ? (
+                            <div>
+                              <h3
+                                className="campeonatos-modal-h2"
+                                style={{ fontSize: "1rem", marginBottom: 10 }}
+                              >
+                                Jogadores em equipes aprovadas
+                              </h3>
+                              <div className="campeonatos-modal-list">
+                                {jogadoresDeEquipes.map((j) => (
+                                  <div
+                                    key={`${j.equipeId}-${j.jogadorId}`}
+                                    className="campeonatos-modal-item"
+                                  >
+                                    <div className="campeonatos-modal-item-title">{j.nome}</div>
+                                    <div className="campeonatos-modal-item-sub">
+                                      <strong>Equipe:</strong> {j.nomeEquipe} ·{" "}
+                                      <strong>Gênero:</strong> {traduzirGeneroJogador(j.genero)}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           ) : null}
                         </div>
-                      ))}
+                      );
+                    })()}
+                </section>
+              ) : null}
+
+              {abaDetalhes === "EQUIPES" ? (
+                <section className="campeonatos-modal-section">
+                  <h2 className="campeonatos-modal-h2">Equipes</h2>
+                  <p className="info-auxiliar" style={{ marginTop: 8 }}>
+                    Equipes inscritas e com status de inscrição aprovado (duplas, quartetos ou
+                    equipes montadas a partir de inscrições individuais).
+                  </p>
+                  {resumoAberto.carregando ? (
+                    <PageLoader label="Carregando equipes" variant="inline" />
+                  ) : resumoAberto.erro ? (
+                    <p className="campeonatos-msg">{resumoAberto.erro}</p>
+                  ) : !resumoAberto.dados ? (
+                    <p className="campeonatos-msg">Não foi possível carregar os dados.</p>
+                  ) : !listaEquipesResumoPublico(resumoAberto.dados.participantes).length ? (
+                    <p className="campeonatos-msg">Nenhuma equipe aprovada ainda.</p>
+                  ) : (
+                    <div className="campeonatos-modal-list">
+                      {listaEquipesResumoPublico(resumoAberto.dados.participantes).map(
+                        (p: any, idx: number) => (
+                          <div key={p.id ?? idx} className="campeonatos-modal-item">
+                            <div className="campeonatos-modal-item-title">{p.nomeEquipe}</div>
+                            <div className="campeonatos-modal-item-sub">
+                              <strong>Capitã(o):</strong> {p.responsavel}
+                            </div>
+                            {p.jogadores?.length ? (
+                              <ul className="campeonatos-modal-ul">
+                                {p.jogadores.map((j: any, jIdx: number) => (
+                                  <li key={j.id ?? jIdx}>
+                                    {j.nome} ({traduzirGeneroJogador(j.genero)})
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="campeonatos-msg" style={{ marginTop: 8 }}>
+                                Elenco ainda não informado.
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
                 </section>
