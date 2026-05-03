@@ -118,7 +118,12 @@ export default function DashboardToolbar({
                   className={`dash-link ${
                     pathname.startsWith(rotas.usuarios) ? "is-active" : ""
                   }`}
-                  onClick={onNavegar}
+                  onClick={() => {
+                    onNavegar();
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new Event("voleiclub:usuarios-requer-senha"));
+                    }
+                  }}
                 >
                   <span className="dash-link-icon" aria-hidden>
                     <Users size={18} />

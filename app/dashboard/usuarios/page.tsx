@@ -1,11 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
 import PageLoader from "@/components/PageLoader";
 import { atualizarUsuarioAdmin, listarUsuariosAdmin } from "@/lib/api";
 import { chavesSessao, getStorage } from "@/lib/sessao";
-import { Pencil, X } from "lucide-react";
+import { Lock, Pencil, X } from "lucide-react";
+
+/** Senha de acesso à área de gestão de usuários (apenas no cliente). */
+const SENHA_AREA_USUARIOS = "505050";
 
 type UsuarioAdmin = {
   id: number;
@@ -48,8 +52,13 @@ function traduzirPapel(papel: string | null | undefined) {
 }
 
 function UsuariosAdminPage() {
+  const router = useRouter();
+  const [areaDesbloqueada, setAreaDesbloqueada] = useState(false);
+  const [senhaGate, setSenhaGate] = useState("");
+  const [erroSenhaGate, setErroSenhaGate] = useState("");
+
   const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [edicao, setEdicao] = useState<UsuarioAdmin | null>(null);
@@ -81,8 +90,34 @@ function UsuariosAdminPage() {
   }, []);
 
   useEffect(() => {
+    if (!areaDesbloqueada) return;
     recarregar();
-  }, [recarregar]);
+  }, [areaDesbloqueada, recarregar]);
+
+  useEffect(() => {
+    function exigirSenhaNovamente() {
+      setAreaDesbloqueada(false);
+      setSenhaGate("");
+      setErroSenhaGate("");
+      setUsuarios([]);
+      setEdicao(null);
+      setMensagem("");
+    }
+    window.addEventListener("voleiclub:usuarios-requer-senha", exigirSenhaNovamente);
+    return () => window.removeEventListener("voleiclub:usuarios-requer-senha", exigirSenhaNovamente);
+  }, []);
+
+  function onConfirmarSenhaGate(e: React.FormEvent) {
+    e.preventDefault();
+    setErroSenhaGate("");
+    const digitada = senhaGate.trim();
+    if (digitada !== SENHA_AREA_USUARIOS) {
+      setErroSenhaGate("Senha incorreta.");
+      return;
+    }
+    setSenhaGate("");
+    setAreaDesbloqueada(true);
+  }
 
   function abrirEdicao(u: UsuarioAdmin) {
     setEdicao(u);
@@ -138,6 +173,78 @@ function UsuariosAdminPage() {
     } finally {
       setSalvando(false);
     }
+  }
+
+  if (!areaDesbloqueada) {
+    return (
+      <div
+        className="campeonatos-modal-backdrop"
+        style={{ zIndex: 70 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-senha-usuarios"
+      >
+        <div className="campeonatos-modal" style={{ width: "min(400px, calc(100vw - 32px))" }}>
+          <div className="campeonatos-modal-head">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  padding: 8,
+                  borderRadius: 12,
+                  background: "rgba(32, 54, 103, 0.08)"
+                }}
+                aria-hidden
+              >
+                <Lock size={20} />
+              </span>
+              <div>
+                <div className="campeonatos-modal-title" id="titulo-senha-usuarios">
+                  Acesso à área de usuários
+                </div>
+                <div className="campeonatos-modal-name" style={{ marginTop: 4, fontSize: "0.95rem" }}>
+                  Informe a senha para continuar.
+                </div>
+              </div>
+            </div>
+          </div>
+          <form className="campeonatos-modal-section" onSubmit={onConfirmarSenhaGate}>
+            <div className="grupo-formulario">
+              <label htmlFor="senha-gate-usuarios">Senha</label>
+              <input
+                id="senha-gate-usuarios"
+                type="password"
+                autoComplete="off"
+                value={senhaGate}
+                onChange={(e) => {
+                  setSenhaGate(e.target.value);
+                  if (erroSenhaGate) setErroSenhaGate("");
+                }}
+                placeholder="••••••"
+                required
+              />
+            </div>
+            {erroSenhaGate ? (
+              <p role="alert" style={{ margin: 0, color: "var(--cor-erro, #c62828)", fontWeight: 700 }}>
+                {erroSenhaGate}
+              </p>
+            ) : null}
+            <div className="campeonatos-modal-actions">
+              <button
+                type="button"
+                className="campeonatos-btn campeonatos-btn--ghost"
+                onClick={() => router.push("/dashboard")}
+              >
+                Voltar ao dashboard
+              </button>
+              <button type="submit" className="campeonatos-btn campeonatos-btn--primary">
+                Entrar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   if (carregando && !usuarios.length) {
