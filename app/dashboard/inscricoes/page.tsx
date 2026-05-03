@@ -411,7 +411,7 @@ function InscricoesAdminPage() {
                         <td data-label="Valor">{formatarDinheiroCentavos(i.valorTotalCentavos)}</td>
                         <td data-label="Ações" style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                           <div style={{ display: "inline-flex", gap: 8 }}>
-                            {!aprovada ? (
+                            {!aprovada && !reprovada ? (
                               <button
                                 type="button"
                                 className="campeonatos-action campeonatos-action--icon campeonatos-action--primary"
@@ -423,7 +423,7 @@ function InscricoesAdminPage() {
                                 <Check aria-hidden className="campeonatos-action-icon" />
                               </button>
                             ) : null}
-                            {!reprovada && !usada && !cancelada ? (
+                            {!aprovada && !reprovada && !usada && !cancelada ? (
                               <button
                                 type="button"
                                 className="campeonatos-action campeonatos-action--icon"

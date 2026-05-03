@@ -925,7 +925,7 @@ export default function AdminCampeonatoPage() {
                                 </button>
                               ) : null}
 
-                              {i.statusAnalise !== "REPROVADA" ? (
+                              {i.statusAnalise === "AGUARDANDO_ANALISE" ? (
                                 <button
                                   type="button"
                                   className="botao-pequeno botao-excluir"
