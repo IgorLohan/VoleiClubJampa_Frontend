@@ -3837,7 +3837,7 @@ button.dash-link {
 .home-sponsors {
   width: 100%;
   margin-top: 0;
-  padding: 28px 0 8px;
+  padding: 28px clamp(12px, 4vw, 20px) 8px;
   border-top: 1px solid rgba(32, 54, 103, 0.1);
   background: linear-gradient(
     180deg,
@@ -3846,11 +3846,14 @@ button.dash-link {
   );
   /* Corta raios/overflow: não entra na seção “Sobre” (acima) nem em “Contato”/rodapé (abaixo) */
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .home-sponsors-inner {
-  width: min(1100px, 92%);
+  width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .home-sponsors-title {
@@ -3867,18 +3870,29 @@ button.dash-link {
 }
 
 /* Patrocinadores: órbita circular (rotação contínua)
-   Corda entre vizinhos ≈ 2R·sin(π/N) — precisa caber o slot (--orbit-card). */
+   Corda entre vizinhos ≈ 2R·sin(π/N) — precisa caber o slot (--orbit-card).
+   --orbit-count vem inline (React); sin() garante raio mínimo quando N aumenta. */
 .home-sponsors-orbit {
   --orbit-duration: 42s;
-  /* Raio mínimo seguro p/ N≈11: 2R·sin(π/N) > largura do slot */
-  --orbit-r: clamp(212px, 26vmin, 272px);
+  --orbit-count: 12;
   --orbit-card: clamp(94px, 11vmin, 112px);
+  /* Raio base; navegadores com sin() em calc refinam abaixo */
+  --orbit-r: clamp(212px, 26vmin, 272px);
   position: relative;
-  /* Tamanho do anel de patrocinadores (não alterar para efeito de raios — raios usam camada separada) */
-  width: min(100%, min(92vw, 560px));
+  width: min(100%, 92vw, 560px);
+  max-width: 560px;
   aspect-ratio: 1;
   margin: 28px auto 18px;
   overflow: visible;
+}
+
+@supports (width: calc(1px * sin(45deg))) {
+  .home-sponsors-orbit {
+    --orbit-r: max(
+      clamp(212px, 26vmin, 272px),
+      calc((var(--orbit-card) * 1.14) / (2 * sin(180deg / var(--orbit-count))))
+    );
+  }
 }
 
 /* Raios: área maior que a órbita (inset negativo), sem mudar --orbit-r / posição dos logos */
@@ -4059,30 +4073,61 @@ button.dash-link {
 }
 
 @media (max-width: 520px) {
+  .home-sponsors {
+    padding-top: 22px;
+  }
+
   .home-sponsors-orbit {
-    /* vw reproduz melhor a largura da tela que vmin (altura) */
-    --orbit-r: clamp(164px, 42vw, 184px);
-    --orbit-card: clamp(76px, 17vw, 88px);
-    width: min(100%, 100%);
-    max-width: 400px;
-    margin: 22px auto 14px;
+    --orbit-card: clamp(68px, 19vw, 92px);
+    --orbit-r: clamp(148px, 42vw, 188px);
+    width: min(100%, calc(100vw - 24px));
+    max-width: none;
+    margin: 20px auto 12px;
   }
 
   .home-sponsors-orbit-rays {
-    inset: clamp(-72px, -18vw, -36px);
+    inset: clamp(-64px, -16vw, -32px);
   }
 
   .home-sponsors-orbit-center {
-    width: clamp(92px, 26vw, 132px);
+    width: clamp(92px, 25vw, 132px);
   }
 
   .home-sponsors-card--orbit {
     padding: 10px 12px;
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
   .home-sponsors-card--orbit img {
-    max-height: min(68px, 92%);
+    max-height: min(72px, 92%);
+  }
+}
+
+/* Telas estreitas mas um pouco mais altas: evita anel minúsculo */
+@media (max-width: 520px) and (min-height: 640px) {
+  .home-sponsors-orbit {
+    --orbit-card: clamp(72px, 18vw, 94px);
+    --orbit-r: clamp(158px, 40vw, 198px);
+  }
+}
+
+@supports (width: calc(1px * sin(45deg))) {
+  @media (max-width: 520px) {
+    .home-sponsors-orbit {
+      --orbit-r: max(
+        clamp(148px, 42vw, 188px),
+        calc((var(--orbit-card) * 1.12) / (2 * sin(180deg / var(--orbit-count))))
+      );
+    }
+  }
+
+  @media (max-width: 520px) and (min-height: 640px) {
+    .home-sponsors-orbit {
+      --orbit-r: max(
+        clamp(158px, 40vw, 198px),
+        calc((var(--orbit-card) * 1.12) / (2 * sin(180deg / var(--orbit-count))))
+      );
+    }
   }
 }
 

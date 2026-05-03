@@ -6,18 +6,28 @@ import { CircleUser, Info, Share2 } from "lucide-react";
 
 const LOGO_VOLEI_CLUB_JAMPA = "/logo/volei_club_jampa.png";
 
+const PASTA_LOGOS_PARCEIROS_COLORIDAS = "/patrocinadores/LOGOS_PNG_PARCEIROS_COLORIDAS";
+
+function logoParceiroColorido(nomeArquivo: string) {
+  return `${PASTA_LOGOS_PARCEIROS_COLORIDAS}/${encodeURIComponent(nomeArquivo)}`;
+}
+
+/** Logos em `public/patrocinadores/LOGOS_PNG_PARCEIROS_COLORIDAS` (versões coloridas). */
 const patrocinadores: Patrocinador[] = [
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_BASSI_ESTUDIO.png", alt: "Bassi Studio" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_HARMONIA_CRIATIVA.png", alt: "Harmonia Criativa" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_HR_TRAINING.png", alt: "HR Training" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_LUDI.png", alt: "Ludi" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_MIUDIM.png", alt: "Miudim" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_OFICINA_JR.png", alt: "Oficina JR" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_PB_PHARMA.png", alt: "PB Pharma" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_PERSONA.png", alt: "Persona" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_SHAKE_ALTIPLANO.png", alt: "Shake Altiplano" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_ACE.png", alt: "Ace" },
-  { src: "/patrocinadores/LOGOS_PNG_PARCEIROS/LOGO_PANIFICADORA_ALMEIDA.png", alt: "Panificadora Almeida" }
+  { src: logoParceiroColorido("ACE ARENA.png"), alt: "ACE Arena" },
+  { src: logoParceiroColorido("AGENCIA LUDI.png"), alt: "Agência Ludi" },
+  { src: logoParceiroColorido("DIGITAL STUDIO.png"), alt: "Digital Studio" },
+  { src: logoParceiroColorido("HARMONIA CRIATIVA.png"), alt: "Harmonia Criativa" },
+  { src: logoParceiroColorido("HR ACADEMIA LOGO.png"), alt: "HR Academia" },
+  { src: logoParceiroColorido("LOGO COMPLETA_Prancheta 1.png"), alt: "Rede de parceiros" },
+  { src: logoParceiroColorido("MUDIM MINIATURAS.png"), alt: "Miudim Miniaturas" },
+  { src: logoParceiroColorido("Oficina JR.png"), alt: "Oficina JR" },
+  { src: logoParceiroColorido("PANIFICADORA ALMEIDA.png"), alt: "Panificadora Almeida" },
+  { src: logoParceiroColorido("PAULA THALITA FISIO.png"), alt: "Paula Thalita — fisioterapia" },
+  { src: logoParceiroColorido("PB PHARMA.png"), alt: "PB Pharma" },
+  { src: logoParceiroColorido("PERSONA.png"), alt: "Persona" },
+  { src: logoParceiroColorido("SHAKE ALTIPLANO.png"), alt: "Shake Altiplano" },
+  { src: logoParceiroColorido("ÓTICA OCULAR.png"), alt: "Ótica Ocular" }
 ];
 
 /** Ajuste os links com os perfis reais do clube. */
