@@ -53,7 +53,7 @@ const TAMANHOS_CAMISA = [
   { value: "G", label: "G" },
   { value: "GG", label: "GG" },
   { value: "XG", label: "XG" },
-  { value: "XXG", label: "XXG" }
+  { value: "XGG", label: "XGG" }
 ];
 
 const ACCEPT_COMPROVANTE = "image/png,image/jpeg,image/jpg,image/webp";
