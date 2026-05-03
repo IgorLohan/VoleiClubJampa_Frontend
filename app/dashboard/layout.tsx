@@ -61,6 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const titulo = useMemo(() => {
     if (pathname === "/dashboard") return "Dashboard";
+    if (pathname.startsWith("/dashboard/usuarios")) return "Usuários";
     if (pathname.startsWith("/dashboard/campeonatos")) return "Campeonatos";
     if (pathname.startsWith("/dashboard/inscricoes")) return "Inscrições";
     if (pathname.startsWith("/dashboard/minhas-inscricoes")) return "Minhas inscrições";

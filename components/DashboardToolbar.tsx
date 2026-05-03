@@ -11,7 +11,8 @@ import {
   LogOut,
   Shield,
   Trophy,
-  UserRound
+  UserRound,
+  Users
 } from "lucide-react";
 
 export type PapelUsuario = "ADMIN" | "PARTICIPANTE";
@@ -41,6 +42,7 @@ export default function DashboardToolbar({
   const rotas = useMemo(() => {
     return {
       dashboard: "/dashboard",
+      usuarios: "/dashboard/usuarios",
       campeonatos: "/dashboard/campeonatos",
       minhasInscricoes: "/dashboard/minhas-inscricoes",
       admin: "/dashboard/admin",
@@ -111,6 +113,18 @@ export default function DashboardToolbar({
 
             {papel === "ADMIN" ? (
               <>
+                <Link
+                  href={rotas.usuarios}
+                  className={`dash-link ${
+                    pathname.startsWith(rotas.usuarios) ? "is-active" : ""
+                  }`}
+                  onClick={onNavegar}
+                >
+                  <span className="dash-link-icon" aria-hidden>
+                    <Users size={18} />
+                  </span>
+                  <span className="dash-link-text">Usuários</span>
+                </Link>
                 <Link
                   href={rotas.admin}
                   className={`dash-link ${pathname.startsWith(rotas.admin) ? "is-active" : ""}`}

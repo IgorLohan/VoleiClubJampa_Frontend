@@ -62,6 +62,34 @@ export async function loginAdmin(dados: { email: string; senha: string }) {
   });
 }
 
+export async function listarUsuariosAdmin() {
+  return fazerRequisicao("/admin/usuarios", {
+    method: "GET"
+  });
+}
+
+export type AtualizarUsuarioAdminPayload = {
+  nome?: string;
+  email?: string;
+  loginAdmin?: string | null;
+  contato?: string | null;
+  dataNascimento?: string | null;
+  sexo?: string | null;
+  papel?: "ADMIN" | "PARTICIPANTE";
+  emailVerificado?: boolean;
+  novaSenha?: string;
+};
+
+export async function atualizarUsuarioAdmin(
+  usuarioId: string | number,
+  payload: AtualizarUsuarioAdminPayload
+) {
+  return fazerRequisicao(`/admin/usuarios/${usuarioId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}
+
 export async function cadastrarParticipante(dados: {
   nome: string;
   email: string;

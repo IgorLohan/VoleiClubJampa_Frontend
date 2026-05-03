@@ -57,7 +57,7 @@ const TAMANHOS_CAMISA = [
 const ACCEPT_COMPROVANTE = "image/png,image/jpeg,image/jpg,image/webp";
 const MAX_COMPROVANTE_BYTES = 5 * 1024 * 1024;
 
-const REGRAS_TORNEIO = `🏐🔥PRIMEIRO TORNEIRO INTERNO VOLEI CLUB JAMPA
+const REGRAS_TORNEIO = `🏐🔥PRIMEIRO TORNEIO INTERNO VOLEI CLUB JAMPA🔥🏐
 1. Objetivo e Filosofia
 Este torneio tem como finalidade principal a integração e confraternização dos membros do nosso grupo. Embora a vitória seja celebrada, o respeito, a ajuda mútua e a diversão estão acima de qualquer placar.
 
