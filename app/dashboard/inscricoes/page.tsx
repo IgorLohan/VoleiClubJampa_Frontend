@@ -8,10 +8,12 @@ import {
   atualizarInscricaoIndividual,
   buscarResumoCampeonato,
   excluirInscricaoIndividual,
-  listarCampeonatosAdmin
+  listarCampeonatosAdmin,
+  reprovarInscricaoIndividual
 } from "@/lib/api";
 import { chavesSessao, getStorage } from "@/lib/sessao";
 import {
+  Ban,
   Check,
   FileImage,
   Pencil,
@@ -69,6 +71,8 @@ function InscricoesAdminPage() {
     src: string;
     jogador: string;
   } | null>(null);
+  const [reprovarAlvo, setReprovarAlvo] = useState<any | null>(null);
+  const [reprovarObservacao, setReprovarObservacao] = useState("");
 
   useEffect(() => {
     async function carregarCampeonatos() {
@@ -117,6 +121,19 @@ function InscricoesAdminPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [comprovanteModal]);
 
+  useEffect(() => {
+    if (!reprovarAlvo) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setReprovarAlvo(null);
+        setReprovarObservacao("");
+        setMensagem("");
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [reprovarAlvo]);
+
   const inscricoesIndividuais = useMemo(() => resumo?.inscricoesIndividuais || [], [resumo]);
 
   async function recarregarResumoAtual() {
@@ -155,9 +172,46 @@ function InscricoesAdminPage() {
     }
   }
 
+  function abrirReprovar(inscricao: any) {
+    setReprovarAlvo(inscricao);
+    setReprovarObservacao("");
+    setMensagem("");
+  }
+
+  function fecharReprovar() {
+    setReprovarAlvo(null);
+    setReprovarObservacao("");
+    setMensagem("");
+  }
+
+  async function onConfirmarReprovar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reprovarAlvo?.id) return;
+    const obs = reprovarObservacao.trim();
+    if (!obs) {
+      setMensagem("Informe o motivo da reprovação.");
+      return;
+    }
+
+    setAcaoEmAndamento(`reprovar-${reprovarAlvo.id}`);
+    setMensagem("");
+    try {
+      await reprovarInscricaoIndividual(reprovarAlvo.id, obs);
+      await recarregarResumoAtual();
+      fecharReprovar();
+    } catch (err) {
+      const error = err as Error;
+      setMensagem(`Erro ao reprovar: ${error.message}`);
+    } finally {
+      setAcaoEmAndamento(null);
+    }
+  }
+
   async function onExcluir(inscricao: any) {
     if (!inscricao?.id) return;
-    const ok = window.confirm("Deseja excluir (cancelar) esta inscrição individual?");
+    const ok = window.confirm(
+      "Remover permanentemente esta inscrição do sistema? Esta ação não pode ser desfeita."
+    );
     if (!ok) return;
 
     setAcaoEmAndamento(`excluir-${inscricao.id}`);
@@ -260,6 +314,7 @@ function InscricoesAdminPage() {
                 {inscricoesIndividuais.length ? (
                   inscricoesIndividuais.map((i: any) => {
                     const aprovada = String(i?.statusAnalise || "").toUpperCase() === "APROVADA";
+                    const reprovada = String(i?.statusAnalise || "").toUpperCase() === "REPROVADA";
                     const cancelada = String(i?.status || "").toUpperCase() === "CANCELADA";
                     const usada = String(i?.status || "").toUpperCase() === "USADA_EM_EQUIPE";
                     const comprovante = String(i?.comprovantePagamento || "").trim();
@@ -292,6 +347,18 @@ function InscricoesAdminPage() {
                                 aria-label="Aprovar"
                               >
                                 <Check aria-hidden className="campeonatos-action-icon" />
+                              </button>
+                            ) : null}
+                            {!reprovada && !usada && !cancelada ? (
+                              <button
+                                type="button"
+                                className="campeonatos-action campeonatos-action--icon"
+                                onClick={() => abrirReprovar(i)}
+                                disabled={acaoEmAndamento !== null}
+                                title="Reprovar inscrição"
+                                aria-label="Reprovar inscrição"
+                              >
+                                <Ban aria-hidden className="campeonatos-action-icon" />
                               </button>
                             ) : null}
                             {comprovante ? (
@@ -335,8 +402,8 @@ function InscricoesAdminPage() {
                               className="campeonatos-action campeonatos-action--icon"
                               onClick={() => onExcluir(i)}
                               disabled={acaoEmAndamento !== null || usada}
-                              title="Excluir"
-                              aria-label="Excluir"
+                              title="Excluir permanentemente"
+                              aria-label="Excluir permanentemente"
                             >
                               <Trash2 aria-hidden className="campeonatos-action-icon" />
                             </button>
@@ -356,6 +423,70 @@ function InscricoesAdminPage() {
             </table>
           </div>
         </section>
+      ) : null}
+
+      {reprovarAlvo ? (
+        <div
+          className="campeonatos-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Reprovar inscrição"
+          style={{ zIndex: 55 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) fecharReprovar();
+          }}
+        >
+          <div className="campeonatos-modal">
+            <div className="campeonatos-modal-head">
+              <div>
+                <div className="campeonatos-modal-title">Reprovar inscrição</div>
+                <div className="campeonatos-modal-name">
+                  {reprovarAlvo?.usuario?.nome || "Jogador"}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="campeonatos-modal-close"
+                onClick={fecharReprovar}
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={onConfirmarReprovar} className="campeonatos-modal-section">
+              <div className="grupo-formulario">
+                <label htmlFor="reprovar-motivo">Motivo da reprovação</label>
+                <textarea
+                  id="reprovar-motivo"
+                  rows={4}
+                  value={reprovarObservacao}
+                  onChange={(e) => setReprovarObservacao(e.target.value)}
+                  placeholder="Descreva o motivo (obrigatório)."
+                  required
+                />
+              </div>
+
+              <div className="campeonatos-modal-actions">
+                <button
+                  type="button"
+                  className="campeonatos-btn campeonatos-btn--ghost"
+                  onClick={fecharReprovar}
+                  disabled={acaoEmAndamento !== null}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="campeonatos-btn campeonatos-btn--primary"
+                  disabled={acaoEmAndamento !== null}
+                >
+                  Reprovar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       ) : null}
 
       {modalEdicaoAberto && inscricaoEmEdicao ? (

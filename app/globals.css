@@ -477,7 +477,8 @@ body {
 }
 
 .grupo-formulario input,
-.grupo-formulario select {
+.grupo-formulario select,
+.grupo-formulario textarea {
   padding: 12px;
   border: 1px solid #d1d5db;
   border-radius: 10px;
