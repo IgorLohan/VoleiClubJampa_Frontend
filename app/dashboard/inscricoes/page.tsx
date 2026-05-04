@@ -317,6 +317,11 @@ function InscricoesAdminPage() {
   const reprovandoNoModal =
     reprovarAlvo != null && acaoEmAndamento === `reprovar-${reprovarAlvo.id}`;
 
+  const salvandoEdicao =
+    modalEdicaoAberto &&
+    inscricaoEmEdicao &&
+    acaoEmAndamento === `editar-${inscricaoEmEdicao.id}`;
+
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <section className="admin-dash-select" aria-label="Filtros de inscrições">
@@ -611,7 +616,7 @@ function InscricoesAdminPage() {
           aria-modal="true"
           aria-label="Editar inscrição individual"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) fecharEdicao();
+            if (e.target === e.currentTarget && !salvandoEdicao) fecharEdicao();
           }}
         >
           <div className="campeonatos-modal">
@@ -627,6 +632,7 @@ function InscricoesAdminPage() {
                 className="campeonatos-modal-close"
                 onClick={fecharEdicao}
                 aria-label="Fechar"
+                disabled={salvandoEdicao}
               >
                 ✕
               </button>
@@ -640,6 +646,7 @@ function InscricoesAdminPage() {
                     id="edit-camisa"
                     value={editTamanhoCamisa}
                     onChange={(e) => setEditTamanhoCamisa(e.target.value)}
+                    disabled={salvandoEdicao}
                   >
                     <option value="P">P</option>
                     <option value="M">M</option>
@@ -663,6 +670,7 @@ function InscricoesAdminPage() {
                       if (!Number.isFinite(v)) return;
                       setEditValorCentavos(Math.round(v * 100));
                     }}
+                    disabled={salvandoEdicao}
                   />
                 </div>
 
@@ -673,6 +681,7 @@ function InscricoesAdminPage() {
                     value={editObservacao}
                     onChange={(e) => setEditObservacao(e.target.value)}
                     placeholder="Ex.: comprovante ilegível, ajustar valor, etc."
+                    disabled={salvandoEdicao}
                   />
                 </div>
               </div>
@@ -682,16 +691,24 @@ function InscricoesAdminPage() {
                   type="button"
                   className="campeonatos-btn campeonatos-btn--ghost"
                   onClick={fecharEdicao}
-                  disabled={acaoEmAndamento !== null}
+                  disabled={salvandoEdicao}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="campeonatos-btn campeonatos-btn--primary"
-                  disabled={acaoEmAndamento !== null}
+                  className={`campeonatos-btn campeonatos-btn--primary${salvandoEdicao ? " campeonatos-btn--with-loader" : ""}`}
+                  disabled={salvandoEdicao}
+                  aria-busy={salvandoEdicao}
                 >
-                  Salvar
+                  {salvandoEdicao ? (
+                    <>
+                      <Loader2 aria-hidden className="campeonatos-modal-btn-loader" />
+                      Salvando…
+                    </>
+                  ) : (
+                    "Salvar"
+                  )}
                 </button>
               </div>
             </form>
