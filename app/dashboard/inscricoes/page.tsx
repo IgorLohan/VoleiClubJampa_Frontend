@@ -17,6 +17,7 @@ import {
   Ban,
   Check,
   FileImage,
+  FileSpreadsheet,
   Loader2,
   Pencil,
   Trash2,
@@ -44,6 +45,14 @@ function traduzirStatusAnalise(status: string | null | undefined) {
   if (u === "APROVADA") return "Aprovada";
   if (u === "REPROVADA") return "Reprovada";
   return status || "—";
+}
+
+function traduzirStatusInscricaoIndividual(status: string | null | undefined) {
+  const s = String(status || "").toUpperCase();
+  if (s === "PENDENTE") return "Pendente de montagem";
+  if (s === "USADA_EM_EQUIPE") return "Alocado em equipe";
+  if (s === "CANCELADA") return "Cancelada";
+  return status ? String(status) : "—";
 }
 
 function classeBadgeStatusAnalise(status: string | null | undefined) {
@@ -322,6 +331,28 @@ function InscricoesAdminPage() {
     inscricaoEmEdicao &&
     acaoEmAndamento === `editar-${inscricaoEmEdicao.id}`;
 
+  async function exportarInscricoesExcel() {
+    if (!inscricoesIndividuais.length) return;
+    const XLSX = await import("xlsx");
+    const linhas = inscricoesIndividuais.map((i: any) => ({
+      Jogador: String(i.usuario?.nome || "—"),
+      "E-mail": String(i.usuario?.email || "—"),
+      Contato: String(i.usuario?.contato?.trim?.() || "—"),
+      Status: traduzirStatusAnalise(i.statusAnalise),
+      Situação: traduzirStatusInscricaoIndividual(i.status),
+      Camisa: String(i.tamanhoCamisa || "—"),
+      Valor: formatarDinheiroCentavos(i.valorTotalCentavos)
+    }));
+    const planilha = XLSX.utils.json_to_sheet(linhas);
+    const livro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(livro, planilha, "Inscrições");
+    const nomeCampeonato = resumo?.campeonato?.nome
+      ? String(resumo.campeonato.nome).replace(/[\\/:*?"<>|]/g, "-")
+      : "campeonato";
+    const dataArquivo = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(livro, `inscricoes-${nomeCampeonato}-${dataArquivo}.xlsx`);
+  }
+
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <section className="admin-dash-select" aria-label="Filtros de inscrições">
@@ -358,7 +389,35 @@ function InscricoesAdminPage() {
 
       {resumo ? (
         <section className="card" aria-label="Tabela de inscrições">
-          <h2 style={{ margin: 0 }}>Inscrições</h2>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12
+            }}
+          >
+            <h2 style={{ margin: 0 }}>Inscrições</h2>
+            <button
+              type="button"
+              className="campeonatos-btn campeonatos-btn--icon campeonatos-btn--success"
+              onClick={() => void exportarInscricoesExcel()}
+              disabled={!inscricoesIndividuais.length}
+              title={
+                inscricoesIndividuais.length
+                  ? "Exportar Excel"
+                  : "Não há inscrições para exportar"
+              }
+              aria-label={
+                inscricoesIndividuais.length
+                  ? "Exportar inscrições para Excel"
+                  : "Exportar Excel (desabilitado: sem inscrições)"
+              }
+            >
+              <FileSpreadsheet aria-hidden className="campeonatos-btn-icon" />
+            </button>
+          </div>
           <p style={{ marginTop: 8, color: "rgba(11, 18, 32, 0.68)", fontWeight: 700 }}>
             {resumo?.campeonato?.nome ? (
               <>
@@ -379,6 +438,7 @@ function InscricoesAdminPage() {
                   <th>E-mail</th>
                   <th>Contato</th>
                   <th>Status</th>
+                  <th>Situação</th>
                   <th>Camisa</th>
                   <th>Valor</th>
                   <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Aprovação</th>
@@ -418,6 +478,7 @@ function InscricoesAdminPage() {
                             {traduzirStatusAnalise(i.statusAnalise)}
                           </span>
                         </td>
+                        <td data-label="Situação">{traduzirStatusInscricaoIndividual(i.status)}</td>
                         <td data-label="Camisa">{i.tamanhoCamisa || "—"}</td>
                         <td data-label="Valor">{formatarDinheiroCentavos(i.valorTotalCentavos)}</td>
                         <td
@@ -524,7 +585,7 @@ function InscricoesAdminPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={9} className="campeonatos-empty">
+                    <td colSpan={10} className="campeonatos-empty">
                       Nenhuma inscrição individual encontrada.
                     </td>
                   </tr>

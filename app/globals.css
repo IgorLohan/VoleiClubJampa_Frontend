@@ -634,6 +634,22 @@ body {
   background: #f3f4f6;
 }
 
+.campeonatos-btn--success {
+  border: 0;
+  color: #fff;
+  background: #15803d;
+}
+
+.campeonatos-btn--success:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.campeonatos-btn--success:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
 .campeonatos-link {
   color: rgba(11, 18, 32, 0.62);
   text-decoration: none;
