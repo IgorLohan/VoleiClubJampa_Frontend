@@ -105,15 +105,6 @@ function agruparJogosPorColunaMataMata(jogos: any[]) {
   return Object.entries(grupos).filter(([, lista]) => lista.length > 0);
 }
 
-function traduzirSexoUsuario(sexo: string | null | undefined) {
-  const s = String(sexo || "").toUpperCase();
-  if (s === "MASCULINO") return "Masculino";
-  if (s === "FEMININO") return "Feminino";
-  if (s === "OUTRO") return "Outro";
-  if (s === "PREFIRO_NAO_INFORMAR") return "Prefiro não informar";
-  return sexo || "—";
-}
-
 function traduzirGeneroJogador(genero: string | null | undefined) {
   const g = String(genero || "").toUpperCase();
   if (g === "M") return "Masculino";
@@ -133,6 +124,20 @@ function traduzirStatusInscricaoIndividualLista(status: string | null | undefine
 function listaEquipesResumoPublico(participantes: any[] | undefined) {
   if (!Array.isArray(participantes)) return [];
   return participantes;
+}
+
+/** Total de pessoas: prioriza inscrições individuais; senão soma jogadores das equipes; fallback ao total da API. */
+function totalParticipantesResumoPublico(dados: ResumoPublico): number {
+  const individuais = dados.inscricoesIndividuais;
+  if (Array.isArray(individuais) && individuais.length > 0) {
+    return individuais.length;
+  }
+  let jogadores = 0;
+  for (const eq of listaEquipesResumoPublico(dados.participantes)) {
+    jogadores += (eq.jogadores || []).length;
+  }
+  if (jogadores > 0) return jogadores;
+  return dados.totais?.participantes ?? 0;
 }
 
 export default function CampeonatosPublicosPage() {
@@ -555,9 +560,7 @@ export default function CampeonatosPublicosPage() {
                       <div className="campeonatos-kv">
                         <strong>Total de participantes</strong>
                         <span>
-                          {resumoAberto.dados.totais?.participantes ??
-                            campeonatoAberto.totais?.participantes ??
-                            0}
+                          {totalParticipantesResumoPublico(resumoAberto.dados)}
                         </span>
                       </div>
                       <div className="campeonatos-kv">
@@ -644,42 +647,9 @@ export default function CampeonatosPublicosPage() {
                                       {i.usuario?.nome || "Participante"}
                                     </div>
                                     <div className="campeonatos-modal-item-sub">
-                                      <strong>Camisa:</strong> {i.tamanhoCamisa || "—"} ·{" "}
-                                      <strong>Sexo (perfil):</strong>{" "}
-                                      {traduzirSexoUsuario(i.usuario?.sexo)}
-                                    </div>
-                                    <div className="campeonatos-modal-item-sub">
-                                      <span className="minhas-inscricoes-badge minhas-inscricoes-badge--ok">
-                                        Inscrição aprovada
-                                      </span>{" "}
                                       <span className="minhas-inscricoes-badge minhas-inscricoes-badge--neutral">
                                         {traduzirStatusInscricaoIndividualLista(i.status)}
                                       </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
-
-                          {jogadoresDeEquipes.length > 0 ? (
-                            <div>
-                              <h3
-                                className="campeonatos-modal-h2"
-                                style={{ fontSize: "1rem", marginBottom: 10 }}
-                              >
-                                Jogadores em equipes aprovadas
-                              </h3>
-                              <div className="campeonatos-modal-list">
-                                {jogadoresDeEquipes.map((j) => (
-                                  <div
-                                    key={`${j.equipeId}-${j.jogadorId}`}
-                                    className="campeonatos-modal-item"
-                                  >
-                                    <div className="campeonatos-modal-item-title">{j.nome}</div>
-                                    <div className="campeonatos-modal-item-sub">
-                                      <strong>Equipe:</strong> {j.nomeEquipe} ·{" "}
-                                      <strong>Gênero:</strong> {traduzirGeneroJogador(j.genero)}
                                     </div>
                                   </div>
                                 ))}
