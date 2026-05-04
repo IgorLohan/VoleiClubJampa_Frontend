@@ -645,6 +645,8 @@ function InscricoesAdminPage() {
                     <option value="M">M</option>
                     <option value="G">G</option>
                     <option value="GG">GG</option>
+                    <option value="XG">XG</option>
+                    <option value="XGG">XGG</option>
                   </select>
                 </div>
 

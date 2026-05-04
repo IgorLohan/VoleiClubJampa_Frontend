@@ -277,7 +277,7 @@ export default function DashboardPage() {
 
   const camisetas = useMemo(() => {
     const lista = (resumoSelecionado?.inscricoesIndividuais || []) as any[];
-    const base = { P: 0, M: 0, G: 0, GG: 0 } as Record<string, number>;
+    const base = { P: 0, M: 0, G: 0, GG: 0, XG: 0, XGG: 0 } as Record<string, number>;
     for (const i of lista) {
       if (i?.status === "CANCELADA" || i?.statusAnalise !== "APROVADA") continue;
       const t = i?.tamanhoCamisa;
@@ -411,7 +411,7 @@ export default function DashboardPage() {
             <section className="shirt-sizes" aria-label="Tamanhos de camisa (inscrições aprovadas)">
               <h2 className="shirt-sizes-title">Tamanhos de camisa</h2>
               <div className="shirt-sizes-grid">
-                {(["P", "M", "G", "GG"] as const).map((t) => (
+                {(["P", "M", "G", "GG", "XG", "XGG"] as const).map((t) => (
                   <article key={t} className="shirt-mini">
                     <div className="shirt-mini-size">{t}</div>
                     <div className="shirt-mini-qty">{camisetas[t]}</div>
