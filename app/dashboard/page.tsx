@@ -56,6 +56,13 @@ function formatarDataBR(data: string | null | undefined) {
   return dt.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
+function formatarBRLCentavos(centavos: number) {
+  return (centavos / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
 /** Edição de perfil: só Masculino ou Feminino. */
 function sexoEditavelPerfil(sexo: string | null | undefined): string {
   const s = String(sexo || "").toUpperCase();
@@ -211,11 +218,14 @@ export default function DashboardPage() {
         setMsgCampeonatos("Carregando campeonatos...");
         const lista = (await listarCampeonatosAdmin()) as any[];
         if (!ativo) return;
-        setCampeonatos(
-          (lista || [])
-            .map((c) => ({ id: Number(c.id), nome: String(c.nome || `Campeonato ${c.id}`) }))
-            .sort((a, b) => b.id - a.id)
-        );
+        const opcoes = (lista || [])
+          .map((c) => ({ id: Number(c.id), nome: String(c.nome || `Campeonato ${c.id}`) }))
+          .sort((a, b) => b.id - a.id);
+        setCampeonatos(opcoes);
+        setCampeonatoSelecionado((idAtual) => {
+          if (idAtual) return idAtual;
+          return opcoes.length ? String(opcoes[0].id) : "";
+        });
         setMsgCampeonatos("");
       } catch (err) {
         if (!ativo) return;
@@ -286,19 +296,20 @@ export default function DashboardPage() {
     return base;
   }, [resumoSelecionado]);
 
-  const totalAprovadoCentavos = useMemo(() => {
+  const totaisFinanceirosInscricoes = useMemo(() => {
     const lista = (resumoSelecionado?.inscricoesIndividuais || []) as any[];
-    return lista
-      .filter((i) => i?.status !== "CANCELADA" && i?.statusAnalise === "APROVADA")
-      .reduce((acc, i) => acc + Number(i?.valorTotalCentavos || 0), 0);
+    const ativa = (i: any) => i?.status !== "CANCELADA";
+    const somar = (pred: (i: any) => boolean) =>
+      lista
+        .filter((i) => ativa(i) && pred(i))
+        .reduce((acc, i) => acc + Number(i?.valorTotalCentavos || 0), 0);
+    return {
+      geral: lista.filter(ativa).reduce((acc, i) => acc + Number(i?.valorTotalCentavos || 0), 0),
+      aprovados: somar((i) => i?.statusAnalise === "APROVADA"),
+      aguardando: somar((i) => i?.statusAnalise === "AGUARDANDO_ANALISE"),
+      reprovados: somar((i) => i?.statusAnalise === "REPROVADA")
+    };
   }, [resumoSelecionado]);
-
-  const totalAprovadoBRL = useMemo(() => {
-    return (totalAprovadoCentavos / 100).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
-  }, [totalAprovadoCentavos]);
 
   return (
     <>
@@ -400,10 +411,42 @@ export default function DashboardPage() {
           ) : null}
 
           {campeonatoSelecionado && metricas.modoIndividual ? (
-            <section className="admin-total-pago" aria-label="Total pago em inscrições">
-              <div className="admin-total-pago-kicker">Total pago em inscrições</div>
-              <div className="admin-total-pago-value">{totalAprovadoBRL}</div>
-              <div className="admin-total-pago-sub">Somente inscrições aprovadas</div>
+            <section
+              className="admin-pagos-resumo"
+              aria-label="Valores das inscrições individuais"
+            >
+              <div className="admin-pagos-grid">
+                <article className="admin-total-pago">
+                  <div className="admin-total-pago-kicker">Total geral</div>
+                  <div className="admin-total-pago-value">
+                    {formatarBRLCentavos(totaisFinanceirosInscricoes.geral)}
+                  </div>
+                  <div className="admin-total-pago-sub">
+                    Soma dos valores (inscrições não canceladas)
+                  </div>
+                </article>
+                <article className="admin-total-pago">
+                  <div className="admin-total-pago-kicker">Pagos aprovados</div>
+                  <div className="admin-total-pago-value">
+                    {formatarBRLCentavos(totaisFinanceirosInscricoes.aprovados)}
+                  </div>
+                  <div className="admin-total-pago-sub">Inscrições com análise aprovada</div>
+                </article>
+                <article className="admin-total-pago">
+                  <div className="admin-total-pago-kicker">Pagos aguardando</div>
+                  <div className="admin-total-pago-value">
+                    {formatarBRLCentavos(totaisFinanceirosInscricoes.aguardando)}
+                  </div>
+                  <div className="admin-total-pago-sub">Aguardando análise do comprovante</div>
+                </article>
+                <article className="admin-total-pago">
+                  <div className="admin-total-pago-kicker">Pagos reprovados</div>
+                  <div className="admin-total-pago-value">
+                    {formatarBRLCentavos(totaisFinanceirosInscricoes.reprovados)}
+                  </div>
+                  <div className="admin-total-pago-sub">Inscrições reprovadas na análise</div>
+                </article>
+              </div>
             </section>
           ) : null}
 

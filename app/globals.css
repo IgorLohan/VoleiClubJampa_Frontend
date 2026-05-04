@@ -3508,6 +3508,29 @@ button.dash-link {
   background: linear-gradient(135deg, #f59e0b 0%, #f97316 140%);
 }
 
+.admin-pagos-resumo {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-pagos-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .admin-pagos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .admin-pagos-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .admin-total-pago {
   border-radius: 18px;
   border: 1px solid var(--border);
@@ -3521,6 +3544,13 @@ button.dash-link {
   padding: 16px 16px 14px;
   display: grid;
   gap: 6px;
+  min-width: 0;
+}
+
+@media (max-width: 699px) {
+  .admin-pagos-grid .admin-total-pago-value {
+    font-size: 1.35rem;
+  }
 }
 
 .admin-total-pago-kicker {

@@ -128,6 +128,10 @@ function EquipesAdminPage() {
           .filter((c) => Number.isFinite(c.id) && c.nome.trim().length > 0)
           .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
         setCampeonatos(opcoes);
+        setCampeonatoId((idAtual) => {
+          if (idAtual) return idAtual;
+          return opcoes.length ? String(opcoes[0].id) : "";
+        });
         setMensagem("");
       } catch (err) {
         const error = err as Error;
