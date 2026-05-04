@@ -48,6 +48,12 @@ const pelada: PeladaInfo = {
 };
 
 const images: CarouselImage[] = [
+  {
+    src: "/branding/Campeonato.jpeg",
+    alt: "Inscrições abertas — Quarteto Misto — Vôlei Clube Jampa",
+    ctaHref: "/login",
+    ctaLabel: "Faça aqui sua inscrição"
+  },
   { src: "/branding/carrossel_1.jpeg", alt: "Pelada Vôlei Club Jampa — foto 1" },
   { src: "/branding/carrossel_2.jpeg", alt: "Pelada Vôlei Club Jampa — foto 2" },
   { src: "/branding/carrossel_3.jpeg", alt: "Pelada Vôlei Club Jampa — foto 3" }

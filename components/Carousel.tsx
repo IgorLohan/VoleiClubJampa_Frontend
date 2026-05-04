@@ -1,10 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 export type CarouselImage = {
   src: string;
   alt?: string;
+  /** Quando definidos, exibe um botão sobre o slide (ex.: inscrição → login). */
+  ctaHref?: string;
+  ctaLabel?: string;
 };
 
 export type CarouselProps = {
@@ -16,7 +20,7 @@ export type CarouselProps = {
 
 export default function Carousel({
   images,
-  intervalMs = 4500,
+  intervalMs = 6500,
   title = "Pelada Vôlei Club Jampa",
   subtitle = "Fotos e informações do encontro semanal."
 }: CarouselProps) {
@@ -62,6 +66,13 @@ export default function Carousel({
               aria-hidden
             />
             <img src={current.src} alt={current.alt || "Foto"} />
+            {current.ctaHref && current.ctaLabel ? (
+              <div className="carousel-cta-wrap">
+                <Link href={current.ctaHref} className="carousel-cta-link">
+                  {current.ctaLabel}
+                </Link>
+              </div>
+            ) : null}
           </>
         ) : null}
       </div>
