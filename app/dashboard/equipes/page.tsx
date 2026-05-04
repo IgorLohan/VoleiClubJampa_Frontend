@@ -4,13 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
 import PageLoader from "@/components/PageLoader";
 import {
+  atualizarInscricao,
   buscarResumoCampeonato,
   criarInscricaoAdmin,
+  excluirInscricao,
   listarCampeonatosAdmin,
   montarEquipeComInscricoesIndividuais
 } from "@/lib/api";
 import { chavesSessao, getStorage } from "@/lib/sessao";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 export default function DashboardEquipesRoutePage() {
   const tokenAdmin = getStorage(chavesSessao.tokenAdmin);
@@ -102,6 +104,19 @@ function EquipesAdminPage() {
     contato: "",
     selecionadas: []
   });
+
+  const [modalEditarAberto, setModalEditarAberto] = useState(false);
+  const [msgModalEditar, setMsgModalEditar] = useState("");
+  const [salvandoEditar, setSalvandoEditar] = useState(false);
+  const [formEdicao, setFormEdicao] = useState<{
+    inscricaoId: number;
+    nomeEquipe: string;
+    responsavel: string;
+    contato: string;
+    jogadores: Array<{ id?: number; nome: string; genero: "M" | "F" }>;
+  } | null>(null);
+
+  const jaTemJogos = (resumo?.jogos?.length ?? 0) > 0;
 
   useEffect(() => {
     async function carregarCampeonatos() {
@@ -318,6 +333,97 @@ function EquipesAdminPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [modalCriarAberto, salvandoCriar]);
 
+  function abrirModalEditar(participante: any) {
+    if (!participante?.id) return;
+    setFormEdicao({
+      inscricaoId: Number(participante.id),
+      nomeEquipe: String(participante.nomeEquipe || ""),
+      responsavel: String(participante.responsavel || ""),
+      contato: String(participante.contato || ""),
+      jogadores: (participante.jogadores || []).map((j: any) => ({
+        id: j.id,
+        nome: String(j.nome || ""),
+        genero: String(j.genero || "M").toUpperCase() === "F" ? "F" : "M"
+      }))
+    });
+    setMsgModalEditar("");
+    setModalEditarAberto(true);
+  }
+
+  function fecharModalEditar() {
+    if (salvandoEditar) return;
+    setModalEditarAberto(false);
+    setFormEdicao(null);
+    setMsgModalEditar("");
+  }
+
+  async function onSubmitEdicao(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formEdicao || !campeonato) return;
+
+    const jogadores = formEdicao.jogadores.map((j) => ({
+      nome: j.nome.trim(),
+      genero: j.genero
+    }));
+
+    if (jogadores.some((j) => !j.nome)) {
+      setMsgModalEditar("Preencha o nome de todos os jogadores.");
+      return;
+    }
+
+    if (jogadores.length !== limite) {
+      setMsgModalEditar(`A equipe deve ter exatamente ${limite} jogador(es).`);
+      return;
+    }
+
+    setSalvandoEditar(true);
+    setMsgModalEditar("");
+    try {
+      await atualizarInscricao(formEdicao.inscricaoId, {
+        nomeEquipe: formEdicao.nomeEquipe.trim(),
+        responsavel: formEdicao.responsavel.trim(),
+        contato: formEdicao.contato.trim() || null,
+        jogadores
+      });
+      await atualizarResumoSilencioso();
+      fecharModalEditar();
+    } catch (err) {
+      const error = err as Error;
+      setMsgModalEditar(error.message || "Erro ao atualizar equipe.");
+    } finally {
+      setSalvandoEditar(false);
+    }
+  }
+
+  async function excluirEquipe(inscricaoId: number) {
+    const ok = window.confirm(
+      "Excluir esta equipe e sua inscrição neste campeonato? Esta ação não pode ser desfeita."
+    );
+    if (!ok) return;
+    setMensagem("Excluindo equipe...");
+    try {
+      await excluirInscricao(inscricaoId);
+      await atualizarResumoSilencioso();
+      setMensagem("");
+    } catch (err) {
+      const error = err as Error;
+      setMensagem(`Erro ao excluir equipe: ${error.message}`);
+    }
+  }
+
+  useEffect(() => {
+    if (!modalEditarAberto) return;
+    function onKey(ev: KeyboardEvent) {
+      if (ev.key === "Escape" && !salvandoEditar) {
+        setModalEditarAberto(false);
+        setFormEdicao(null);
+        setMsgModalEditar("");
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modalEditarAberto, salvandoEditar]);
+
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <section className="admin-dash-select" aria-label="Seleção de campeonato">
@@ -400,6 +506,7 @@ function EquipesAdminPage() {
                     <th>Contato</th>
                     <th>Status</th>
                     <th>Jogadores</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -430,6 +537,34 @@ function EquipesAdminPage() {
                           </ul>
                         ) : (
                           "—"
+                        )}
+                      </td>
+                      <td data-label="Ações">
+                        {jaTemJogos ? (
+                          <span className="info-auxiliar" style={{ fontSize: "0.82rem" }}>
+                            Após o chaveamento, edição e exclusão ficam bloqueadas.
+                          </span>
+                        ) : (
+                          <div className="acoes-card" style={{ marginTop: 0 }}>
+                            <button
+                              type="button"
+                              className="botao-pequeno botao-pequeno--icon"
+                              onClick={() => abrirModalEditar(p)}
+                              disabled={!p.id}
+                              aria-label={`Editar inscrição — ${p.nomeEquipe || "equipe"}`}
+                            >
+                              <Pencil size={18} strokeWidth={2.25} aria-hidden />
+                            </button>
+                            <button
+                              type="button"
+                              className="botao-pequeno botao-pequeno--icon botao-excluir"
+                              onClick={() => void excluirEquipe(Number(p.id))}
+                              disabled={!p.id}
+                              aria-label={`Excluir inscrição — ${p.nomeEquipe || "equipe"}`}
+                            >
+                              <Trash2 size={18} strokeWidth={2.25} aria-hidden />
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -750,6 +885,181 @@ function EquipesAdminPage() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {modalEditarAberto && formEdicao && campeonato ? (
+        <div
+          className="campeonatos-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-editar-equipe-titulo"
+          style={{ zIndex: 80 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !salvandoEditar) fecharModalEditar();
+          }}
+        >
+          <div
+            className="campeonatos-modal campeonatos-modal--full"
+            style={{ width: "min(640px, calc(100vw - 32px))" }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="campeonatos-modal-head">
+              <div>
+                <div className="campeonatos-modal-title" id="modal-editar-equipe-titulo">
+                  Editar equipe
+                </div>
+                <div className="campeonatos-modal-name">
+                  {nomeCampeonato} · {traduzirTipoParticipanteLabel(campeonato.tipoParticipante)} ·{" "}
+                  {traduzirCategoriaLabel(campeonato.categoria)}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="campeonatos-modal-close"
+                onClick={fecharModalEditar}
+                aria-label="Fechar"
+                disabled={salvandoEditar}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="campeonatos-modal-scroll">
+              <p className="info-auxiliar">
+                Altere nome da equipe, capitã(o), contato e dados dos jogadores. As alterações seguem
+                as mesmas regras do cadastro (quantidade de jogadores conforme o tipo do campeonato).
+              </p>
+
+              {msgModalEditar ? (
+                <p role="alert" style={{ color: "var(--cor-erro, #c62828)", fontWeight: 700 }}>
+                  {msgModalEditar}
+                </p>
+              ) : null}
+
+              <form className="campeonatos-modal-section" onSubmit={onSubmitEdicao}>
+                <div className="formulario-edicao-inscricao">
+                  <div className="grupo-formulario">
+                    <label htmlFor="eq-ed-nome">Nome da equipe</label>
+                    <input
+                      id="eq-ed-nome"
+                      value={formEdicao.nomeEquipe}
+                      onChange={(e) =>
+                        setFormEdicao((prev) =>
+                          prev ? { ...prev, nomeEquipe: e.target.value } : prev
+                        )
+                      }
+                      required
+                      disabled={salvandoEditar}
+                    />
+                  </div>
+                  <div className="grupo-formulario">
+                    <label htmlFor="eq-ed-cap">Capitã(o)</label>
+                    <input
+                      id="eq-ed-cap"
+                      value={formEdicao.responsavel}
+                      onChange={(e) =>
+                        setFormEdicao((prev) =>
+                          prev ? { ...prev, responsavel: e.target.value } : prev
+                        )
+                      }
+                      required
+                      disabled={salvandoEditar}
+                    />
+                  </div>
+                  <div className="grupo-formulario">
+                    <label htmlFor="eq-ed-contato">Contato</label>
+                    <input
+                      id="eq-ed-contato"
+                      value={formEdicao.contato}
+                      onChange={(e) =>
+                        setFormEdicao((prev) =>
+                          prev ? { ...prev, contato: e.target.value } : prev
+                        )
+                      }
+                      placeholder="Telefone / WhatsApp"
+                      disabled={salvandoEditar}
+                    />
+                  </div>
+                </div>
+
+                <h3 className="campeonatos-modal-h2" style={{ fontSize: "1rem", marginTop: 8 }}>
+                  Jogadores ({limite})
+                </h3>
+                <div className="bloco-jogadores-edicao">
+                  {formEdicao.jogadores.map((jog, idx) => (
+                    <div key={jog.id ?? idx} className="card-jogador">
+                      <h4>Jogador {idx + 1}</h4>
+                      <div className="grupo-formulario">
+                        <label htmlFor={`eq-ed-jog-nome-${idx}`}>Nome</label>
+                        <input
+                          id={`eq-ed-jog-nome-${idx}`}
+                          value={jog.nome}
+                          onChange={(e) =>
+                            setFormEdicao((prev) => {
+                              if (!prev) return prev;
+                              const jogadores = [...prev.jogadores];
+                              jogadores[idx] = { ...jogadores[idx], nome: e.target.value };
+                              return { ...prev, jogadores };
+                            })
+                          }
+                          required
+                          disabled={salvandoEditar}
+                        />
+                      </div>
+                      <div className="grupo-formulario">
+                        <label htmlFor={`eq-ed-jog-gen-${idx}`}>Gênero</label>
+                        <select
+                          id={`eq-ed-jog-gen-${idx}`}
+                          value={jog.genero}
+                          onChange={(e) =>
+                            setFormEdicao((prev) => {
+                              if (!prev) return prev;
+                              const jogadores = [...prev.jogadores];
+                              jogadores[idx] = {
+                                ...jogadores[idx],
+                                genero: e.target.value as "M" | "F"
+                              };
+                              return { ...prev, jogadores };
+                            })
+                          }
+                          disabled={salvandoEditar}
+                        >
+                          <option value="M">Masculino (M)</option>
+                          <option value="F">Feminino (F)</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="campeonatos-modal-actions">
+                  <button
+                    type="button"
+                    className="campeonatos-btn campeonatos-btn--ghost"
+                    onClick={fecharModalEditar}
+                    disabled={salvandoEditar}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className={`campeonatos-btn campeonatos-btn--primary${salvandoEditar ? " campeonatos-btn--with-loader" : ""}`}
+                    disabled={salvandoEditar}
+                  >
+                    {salvandoEditar ? (
+                      <>
+                        <Loader2 aria-hidden className="campeonatos-modal-btn-loader" />
+                        Salvando…
+                      </>
+                    ) : (
+                      "Salvar alterações"
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

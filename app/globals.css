@@ -2455,6 +2455,18 @@ body {
   cursor: not-allowed;
 }
 
+/** Só ícone: mesma identidade de `botao-pequeno`, área fixa (ex.: tabela de equipes). */
+.botao-pequeno--icon {
+  margin-top: 0 !important;
+  padding: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
 .confronto-visual {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
