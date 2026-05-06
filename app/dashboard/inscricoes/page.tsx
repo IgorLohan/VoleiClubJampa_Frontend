@@ -209,6 +209,30 @@ function InscricoesAdminPage() {
   }, [reprovarAlvo]);
 
   const inscricoesIndividuais = useMemo(() => resumo?.inscricoesIndividuais || [], [resumo]);
+  const inscritosAprovados = useMemo(
+    () =>
+      (inscricoesIndividuais || []).filter(
+        (i: any) =>
+          String(i?.status || "").toUpperCase() !== "CANCELADA" &&
+          String(i?.statusAnalise || "").toUpperCase() === "APROVADA"
+      ),
+    [inscricoesIndividuais]
+  );
+
+  const totaisCards = useMemo(() => {
+    let homens = 0;
+    let mulheres = 0;
+    for (const i of inscritosAprovados) {
+      const sexo = String(i?.usuario?.sexo || "").toUpperCase();
+      if (sexo === "MASCULINO") homens += 1;
+      if (sexo === "FEMININO") mulheres += 1;
+    }
+    return {
+      total: inscritosAprovados.length,
+      homens,
+      mulheres
+    };
+  }, [inscritosAprovados]);
 
   async function recarregarResumoAtual() {
     if (!campeonatoId) return;
@@ -428,6 +452,65 @@ function InscricoesAdminPage() {
               "Selecione um campeonato."
             )}
           </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gap: 12,
+              marginTop: 12
+            }}
+            aria-label="Totais de inscrições"
+          >
+            <div
+              className="card"
+              style={{
+                padding: 14,
+                borderRadius: 16,
+                border: "1px solid rgba(32, 54, 103, 0.10)",
+                background: "rgba(255, 255, 255, 0.9)"
+              }}
+            >
+              <div style={{ fontWeight: 900, color: "rgba(11, 18, 32, 0.70)" }}>
+                Total de inscritos aprovados
+              </div>
+              <div style={{ fontSize: "1.65rem", fontWeight: 950, marginTop: 6 }}>
+                {totaisCards.total}
+              </div>
+            </div>
+            <div
+              className="card"
+              style={{
+                padding: 14,
+                borderRadius: 16,
+                border: "1px solid rgba(32, 54, 103, 0.10)",
+                background: "rgba(255, 255, 255, 0.9)"
+              }}
+            >
+              <div style={{ fontWeight: 900, color: "rgba(11, 18, 32, 0.70)" }}>
+                Total de mulheres aprovadas
+              </div>
+              <div style={{ fontSize: "1.65rem", fontWeight: 950, marginTop: 6 }}>
+                {totaisCards.mulheres}
+              </div>
+            </div>
+            <div
+              className="card"
+              style={{
+                padding: 14,
+                borderRadius: 16,
+                border: "1px solid rgba(32, 54, 103, 0.10)",
+                background: "rgba(255, 255, 255, 0.9)"
+              }}
+            >
+              <div style={{ fontWeight: 900, color: "rgba(11, 18, 32, 0.70)" }}>
+                Total de homens aprovados
+              </div>
+              <div style={{ fontSize: "1.65rem", fontWeight: 950, marginTop: 6 }}>
+                {totaisCards.homens}
+              </div>
+            </div>
+          </div>
 
           <div className="campeonatos-table-wrap" style={{ marginTop: 14 }}>
             <table className="campeonatos-table" aria-label="Inscrições individuais">
