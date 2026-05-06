@@ -27,9 +27,16 @@ type CampeonatoPublico = Record<string, any> & {
   tipoParticipante: string;
   categoria: string;
   formato: string;
+  modoInscricao?: string;
+  quantidadeMaxima?: number | null;
   inscricoesAbertas: boolean;
   statusCampeonato: string;
-  totais: { participantes: number; jogos: number };
+  totais: {
+    participantes: number;
+    inscricoesIndividuais?: number;
+    inscricoesIndividuaisAtivas?: number;
+    jogos: number;
+  };
 };
 
 type ResumoPublico = Record<string, any> & {
@@ -138,6 +145,21 @@ function totalParticipantesResumoPublico(dados: ResumoPublico): number {
   }
   if (jogadores > 0) return jogadores;
   return dados.totais?.participantes ?? 0;
+}
+
+function inscricoesCompletas(campeonato: CampeonatoPublico): boolean {
+  const limite = campeonato.quantidadeMaxima;
+  if (limite === null || limite === undefined) return false;
+  const modo = String(campeonato.modoInscricao || "").toUpperCase();
+  const total =
+    modo === "INDIVIDUAL"
+      ? Number(
+          campeonato.totais?.inscricoesIndividuaisAtivas ??
+            campeonato.totais?.inscricoesIndividuais ??
+            0
+        )
+      : Number(campeonato.totais?.participantes ?? 0);
+  return total >= Number(limite);
 }
 
 export default function CampeonatosPublicosPage() {
@@ -349,6 +371,7 @@ export default function CampeonatosPublicosPage() {
             filtrados.map((campeonato) => {
               const textoStatus = traduzirStatus(campeonato.statusCampeonato);
                   const classeStatus = classeStatusCampeonato(campeonato.statusCampeonato);
+              const completo = inscricoesCompletas(campeonato);
               return (
                     <tr key={campeonato.id}>
                       <td className="campeonatos-name" data-label="Nome">
@@ -390,6 +413,26 @@ export default function CampeonatosPublicosPage() {
                         >
                           <UserPlus aria-hidden className="campeonatos-action-icon" />
                         </button>
+                      ) : completo ? (
+                        <>
+                          <button
+                            type="button"
+                            className="campeonatos-action campeonatos-action--icon"
+                            disabled
+                            aria-label={`Inscrições completas em ${campeonato.nome}`}
+                            title="As inscrições já estão completas."
+                            style={{ opacity: 0.55, cursor: "not-allowed" }}
+                          >
+                            <UserPlus aria-hidden className="campeonatos-action-icon" />
+                          </button>
+                          <span
+                            className="minhas-inscricoes-badge minhas-inscricoes-badge--warn"
+                            title="Limite de inscrições atingido"
+                            style={{ marginLeft: 8 }}
+                          >
+                            Inscrições completas
+                          </span>
+                        </>
                       ) : (
                         <button
                           type="button"
@@ -879,6 +922,26 @@ export default function CampeonatosPublicosPage() {
                   >
                     <UserPlus aria-hidden className="campeonatos-btn-icon" />
                   </button>
+                ) : inscricoesCompletas(campeonatoAberto) ? (
+                  <>
+                    <button
+                      type="button"
+                      className="campeonatos-btn campeonatos-btn--ghost campeonatos-btn--icon"
+                      disabled
+                      aria-label="Inscrições completas"
+                      title="As inscrições já estão completas."
+                      style={{ opacity: 0.55, cursor: "not-allowed" }}
+                    >
+                      <UserPlus aria-hidden className="campeonatos-btn-icon" />
+                    </button>
+                    <span
+                      className="minhas-inscricoes-badge minhas-inscricoes-badge--warn"
+                      title="Limite de inscrições atingido"
+                      style={{ marginLeft: 10 }}
+                    >
+                      Lotado
+                    </span>
+                  </>
                 ) : (
                   <button
                     type="button"
