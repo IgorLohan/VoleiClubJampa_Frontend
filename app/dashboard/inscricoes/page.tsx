@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
 import PageLoader from "@/components/PageLoader";
+import TablePagination from "@/components/TablePagination";
 import {
   API_BASE,
   aprovarInscricaoIndividual,
@@ -53,6 +54,10 @@ function traduzirStatusInscricaoIndividual(status: string | null | undefined) {
   if (s === "USADA_EM_EQUIPE") return "Alocado em equipe";
   if (s === "CANCELADA") return "Cancelada";
   return status ? String(status) : "—";
+}
+
+function textoInscritoEm(inscricao: any) {
+  return formatarDataCurta(inscricao?.criadoEm);
 }
 
 function classeBadgeStatusAnalise(status: string | null | undefined) {
@@ -138,6 +143,8 @@ function InscricoesAdminPage() {
   } | null>(null);
   const [reprovarAlvo, setReprovarAlvo] = useState<any | null>(null);
   const [reprovarObservacao, setReprovarObservacao] = useState("");
+  const [pagina, setPagina] = useState(0);
+  const [linhasPorPagina, setLinhasPorPagina] = useState(10);
 
   useEffect(() => {
     async function carregarCampeonatos() {
@@ -168,6 +175,7 @@ function InscricoesAdminPage() {
         const dados = await buscarResumoCampeonato(campeonatoId);
         setResumo(dados);
         setMensagem("");
+        setPagina(0);
       } catch (err) {
         const error = err as Error;
         setResumo(null);
@@ -209,6 +217,11 @@ function InscricoesAdminPage() {
   }, [reprovarAlvo]);
 
   const inscricoesIndividuais = useMemo(() => resumo?.inscricoesIndividuais || [], [resumo]);
+  const inscricoesPaginadas = useMemo(() => {
+    const ini = pagina * linhasPorPagina;
+    const fim = ini + linhasPorPagina;
+    return (inscricoesIndividuais || []).slice(ini, fim);
+  }, [inscricoesIndividuais, pagina, linhasPorPagina]);
   const inscritosAprovados = useMemo(
     () =>
       (inscricoesIndividuais || []).filter(
@@ -363,7 +376,7 @@ function InscricoesAdminPage() {
       "E-mail": String(i.usuario?.email || "—"),
       Contato: String(i.usuario?.contato?.trim?.() || "—"),
       Status: traduzirStatusAnalise(i.statusAnalise),
-      Situação: traduzirStatusInscricaoIndividual(i.status),
+      "Inscrito em": textoInscritoEm(i),
       Camisa: String(i.tamanhoCamisa || "—"),
       Valor: formatarDinheiroCentavos(i.valorTotalCentavos)
     }));
@@ -456,7 +469,7 @@ function InscricoesAdminPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
               gap: 12,
               marginTop: 12
             }}
@@ -471,7 +484,16 @@ function InscricoesAdminPage() {
                 background: "rgba(255, 255, 255, 0.9)"
               }}
             >
-              <div style={{ fontWeight: 900, color: "rgba(11, 18, 32, 0.70)" }}>
+              <div
+                style={{
+                  fontWeight: 900,
+                  color: "rgba(11, 18, 32, 0.70)",
+                  fontSize: "clamp(0.85rem, 2.6vw, 0.98rem)",
+                  lineHeight: 1.15,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word"
+                }}
+              >
                 Total de inscritos aprovados
               </div>
               <div style={{ fontSize: "1.65rem", fontWeight: 950, marginTop: 6 }}>
@@ -487,7 +509,16 @@ function InscricoesAdminPage() {
                 background: "rgba(255, 255, 255, 0.9)"
               }}
             >
-              <div style={{ fontWeight: 900, color: "rgba(11, 18, 32, 0.70)" }}>
+              <div
+                style={{
+                  fontWeight: 900,
+                  color: "rgba(11, 18, 32, 0.70)",
+                  fontSize: "clamp(0.85rem, 2.6vw, 0.98rem)",
+                  lineHeight: 1.15,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word"
+                }}
+              >
                 Total de mulheres aprovadas
               </div>
               <div style={{ fontSize: "1.65rem", fontWeight: 950, marginTop: 6 }}>
@@ -503,7 +534,16 @@ function InscricoesAdminPage() {
                 background: "rgba(255, 255, 255, 0.9)"
               }}
             >
-              <div style={{ fontWeight: 900, color: "rgba(11, 18, 32, 0.70)" }}>
+              <div
+                style={{
+                  fontWeight: 900,
+                  color: "rgba(11, 18, 32, 0.70)",
+                  fontSize: "clamp(0.85rem, 2.6vw, 0.98rem)",
+                  lineHeight: 1.15,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word"
+                }}
+              >
                 Total de homens aprovados
               </div>
               <div style={{ fontSize: "1.65rem", fontWeight: 950, marginTop: 6 }}>
@@ -521,7 +561,7 @@ function InscricoesAdminPage() {
                   <th>E-mail</th>
                   <th>Contato</th>
                   <th>Status</th>
-                  <th>Situação</th>
+                  <th>Inscrito em</th>
                   <th>Camisa</th>
                   <th>Valor</th>
                   <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Aprovação</th>
@@ -530,7 +570,7 @@ function InscricoesAdminPage() {
               </thead>
               <tbody>
                 {inscricoesIndividuais.length ? (
-                  inscricoesIndividuais.map((i: any) => {
+                  inscricoesPaginadas.map((i: any) => {
                     const aprovada = String(i?.statusAnalise || "").toUpperCase() === "APROVADA";
                     const reprovada = String(i?.statusAnalise || "").toUpperCase() === "REPROVADA";
                     const cancelada = String(i?.status || "").toUpperCase() === "CANCELADA";
@@ -561,7 +601,7 @@ function InscricoesAdminPage() {
                             {traduzirStatusAnalise(i.statusAnalise)}
                           </span>
                         </td>
-                        <td data-label="Situação">{traduzirStatusInscricaoIndividual(i.status)}</td>
+                        <td data-label="Inscrito em">{textoInscritoEm(i)}</td>
                         <td data-label="Camisa">{i.tamanhoCamisa || "—"}</td>
                         <td data-label="Valor">{formatarDinheiroCentavos(i.valorTotalCentavos)}</td>
                         <td
@@ -675,6 +715,16 @@ function InscricoesAdminPage() {
                 )}
               </tbody>
             </table>
+            <TablePagination
+              total={inscricoesIndividuais.length}
+              page={pagina}
+              rowsPerPage={linhasPorPagina}
+              onPageChange={setPagina}
+              onRowsPerPageChange={(n) => {
+                setLinhasPorPagina(n);
+                setPagina(0);
+              }}
+            />
           </div>
         </section>
       ) : null}

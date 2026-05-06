@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CampeonatosPublicosPage from "@/app/campeonatos/page";
 import PageLoader from "@/components/PageLoader";
+import TablePagination from "@/components/TablePagination";
 import {
   API_BASE,
   atualizarUsuarioAdmin,
@@ -136,6 +137,8 @@ function UsuariosAdminPage() {
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
   const [exportandoSemInscricao, setExportandoSemInscricao] = useState(false);
+  const [pagina, setPagina] = useState(0);
+  const [linhasPorPagina, setLinhasPorPagina] = useState(10);
   const [fotoModal, setFotoModal] = useState<{ src: string; nome: string } | null>(null);
   const [edicao, setEdicao] = useState<UsuarioAdmin | null>(null);
   const [form, setForm] = useState({
@@ -177,6 +180,7 @@ function UsuariosAdminPage() {
     try {
       const lista = (await listarUsuariosAdmin()) as UsuarioAdmin[];
       setUsuarios(Array.isArray(lista) ? lista : []);
+      setPagina(0);
     } catch (err) {
       const error = err as Error;
       setMensagem(`Erro ao carregar usuários: ${error.message}`);
@@ -185,6 +189,12 @@ function UsuariosAdminPage() {
       setCarregando(false);
     }
   }, []);
+
+  const usuariosPaginados = useMemo(() => {
+    const ini = pagina * linhasPorPagina;
+    const fim = ini + linhasPorPagina;
+    return (usuarios || []).slice(ini, fim);
+  }, [usuarios, pagina, linhasPorPagina]);
 
   useEffect(() => {
     if (!areaDesbloqueada) return;
@@ -490,7 +500,7 @@ function UsuariosAdminPage() {
                   </td>
                 </tr>
               ) : (
-                usuarios.map((u) => {
+                usuariosPaginados.map((u) => {
                   const excluindoEste = excluindoId === u.id;
                   const bloqueioExcluir = motivoBloqueioExclusao(u);
                   const urlFoto = montarUrlFoto(u.fotoPerfil);
@@ -570,6 +580,16 @@ function UsuariosAdminPage() {
               )}
             </tbody>
           </table>
+          <TablePagination
+            total={usuarios.length}
+            page={pagina}
+            rowsPerPage={linhasPorPagina}
+            onPageChange={setPagina}
+            onRowsPerPageChange={(n) => {
+              setLinhasPorPagina(n);
+              setPagina(0);
+            }}
+          />
         </div>
       </section>
 
@@ -584,7 +604,9 @@ function UsuariosAdminPage() {
             if (e.target === e.currentTarget && !salvando) fecharEdicao();
           }}
         >
-          <div className="campeonatos-modal" style={{ width: "min(520px, calc(100vw - 32px))" }}>
+          <div
+            className="campeonatos-modal !flex !max-h-[85vh] !w-[min(520px,calc(100vw-32px))] !flex-col !overflow-hidden"
+          >
             <div className="campeonatos-modal-head">
               <div>
                 <div className="campeonatos-modal-title" id="modal-usuario-titulo">
@@ -605,137 +627,142 @@ function UsuariosAdminPage() {
               </button>
             </div>
 
-            <p className="info-auxiliar" style={{ margin: 0 }}>
-              Para excluir, feche este painel e use o ícone da lixeira na tabela.
-            </p>
+            <form onSubmit={onSalvar} className="!flex min-h-0 !flex-1 !flex-col">
+              <div className="min-h-0 !flex-1 !overflow-y-auto overscroll-contain">
+                <div className="campeonatos-modal-section">
+                  <p className="info-auxiliar" style={{ margin: 0 }}>
+                    Para excluir, feche este painel e use o ícone da lixeira na tabela.
+                  </p>
 
-            {mensagem ? (
-              <p role="alert" style={{ color: "var(--cor-erro, #c62828)", margin: 0, fontWeight: 700 }}>
-                {mensagem}
-              </p>
-            ) : null}
+                  {mensagem ? (
+                    <p
+                      role="alert"
+                      style={{
+                        color: "var(--cor-erro, #c62828)",
+                        margin: 0,
+                        fontWeight: 700
+                      }}
+                    >
+                      {mensagem}
+                    </p>
+                  ) : null}
 
-            <form onSubmit={onSalvar} className="campeonatos-modal-section">
-              <div className="formulario-edicao-inscricao">
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-nome">Nome</label>
-                  <input
-                    id="usu-nome"
-                    value={form.nome}
-                    onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
-                    required
-                    disabled={salvando}
-                  />
-                </div>
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-email">E-mail</label>
-                  <input
-                    id="usu-email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                    required
-                    disabled={salvando}
-                  />
-                </div>
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-papel">Papel</label>
-                  <select
-                    id="usu-papel"
-                    value={form.papel}
-                    onChange={(e) =>
-                      setForm((p) => ({
-                        ...p,
-                        papel: e.target.value as "ADMIN" | "PARTICIPANTE"
-                      }))
-                    }
-                    disabled={salvando}
-                  >
-                    <option value="PARTICIPANTE">Participante</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
-                {form.papel === "ADMIN" ? (
-                  <div className="grupo-formulario">
-                    <label htmlFor="usu-login-admin">Login administrativo</label>
-                    <input
-                      id="usu-login-admin"
-                      value={form.loginAdmin}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, loginAdmin: e.target.value }))
-                      }
-                      placeholder="Usado no acesso dedicado ao painel"
-                      required={form.papel === "ADMIN"}
-                      disabled={salvando}
-                    />
+                  <div className="formulario-edicao-inscricao">
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-nome">Nome</label>
+                      <input
+                        id="usu-nome"
+                        value={form.nome}
+                        onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
+                        required
+                        disabled={salvando}
+                      />
+                    </div>
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-email">E-mail</label>
+                      <input
+                        id="usu-email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                        required
+                        disabled={salvando}
+                      />
+                    </div>
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-papel">Papel</label>
+                      <select
+                        id="usu-papel"
+                        value={form.papel}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            papel: e.target.value as "ADMIN" | "PARTICIPANTE"
+                          }))
+                        }
+                        disabled={salvando}
+                      >
+                        <option value="PARTICIPANTE">Participante</option>
+                        <option value="ADMIN">Administrador</option>
+                      </select>
+                    </div>
+                    {form.papel === "ADMIN" ? (
+                      <div className="grupo-formulario">
+                        <label htmlFor="usu-login-admin">Login administrativo</label>
+                        <input
+                          id="usu-login-admin"
+                          value={form.loginAdmin}
+                          onChange={(e) => setForm((p) => ({ ...p, loginAdmin: e.target.value }))}
+                          placeholder="Usado no acesso dedicado ao painel"
+                          required={form.papel === "ADMIN"}
+                          disabled={salvando}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-contato">Contato</label>
+                      <input
+                        id="usu-contato"
+                        value={form.contato}
+                        onChange={(e) => setForm((p) => ({ ...p, contato: e.target.value }))}
+                        disabled={salvando}
+                      />
+                    </div>
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-nasc">Data de nascimento</label>
+                      <input
+                        id="usu-nasc"
+                        type="date"
+                        value={form.dataNascimento}
+                        onChange={(e) => setForm((p) => ({ ...p, dataNascimento: e.target.value }))}
+                        disabled={salvando}
+                      />
+                    </div>
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-sexo">Sexo (perfil)</label>
+                      <select
+                        id="usu-sexo"
+                        value={form.sexo}
+                        onChange={(e) => setForm((p) => ({ ...p, sexo: e.target.value }))}
+                        disabled={salvando}
+                      >
+                        <option value="">—</option>
+                        <option value="MASCULINO">Masculino</option>
+                        <option value="FEMININO">Feminino</option>
+                        <option value="OUTRO">Outro</option>
+                        <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
+                      </select>
+                    </div>
+                    <div className="grupo-formulario">
+                      <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={form.emailVerificado}
+                          onChange={(e) =>
+                            setForm((p) => ({ ...p, emailVerificado: e.target.checked }))
+                          }
+                          disabled={salvando}
+                        />
+                        E-mail verificado
+                      </label>
+                    </div>
+                    <div className="grupo-formulario">
+                      <label htmlFor="usu-senha">Nova senha (opcional)</label>
+                      <input
+                        id="usu-senha"
+                        type="password"
+                        autoComplete="new-password"
+                        value={form.novaSenha}
+                        onChange={(e) => setForm((p) => ({ ...p, novaSenha: e.target.value }))}
+                        placeholder="Deixe em branco para não alterar"
+                        disabled={salvando}
+                      />
+                    </div>
                   </div>
-                ) : null}
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-contato">Contato</label>
-                  <input
-                    id="usu-contato"
-                    value={form.contato}
-                    onChange={(e) => setForm((p) => ({ ...p, contato: e.target.value }))}
-                    disabled={salvando}
-                  />
-                </div>
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-nasc">Data de nascimento</label>
-                  <input
-                    id="usu-nasc"
-                    type="date"
-                    value={form.dataNascimento}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, dataNascimento: e.target.value }))
-                    }
-                    disabled={salvando}
-                  />
-                </div>
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-sexo">Sexo (perfil)</label>
-                  <select
-                    id="usu-sexo"
-                    value={form.sexo}
-                    onChange={(e) => setForm((p) => ({ ...p, sexo: e.target.value }))}
-                    disabled={salvando}
-                  >
-                    <option value="">—</option>
-                    <option value="MASCULINO">Masculino</option>
-                    <option value="FEMININO">Feminino</option>
-                    <option value="OUTRO">Outro</option>
-                    <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
-                  </select>
-                </div>
-                <div className="grupo-formulario">
-                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={form.emailVerificado}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, emailVerificado: e.target.checked }))
-                      }
-                      disabled={salvando}
-                    />
-                    E-mail verificado
-                  </label>
-                </div>
-                <div className="grupo-formulario">
-                  <label htmlFor="usu-senha">Nova senha (opcional)</label>
-                  <input
-                    id="usu-senha"
-                    type="password"
-                    autoComplete="new-password"
-                    value={form.novaSenha}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, novaSenha: e.target.value }))
-                    }
-                    placeholder="Deixe em branco para não alterar"
-                    disabled={salvando}
-                  />
                 </div>
               </div>
 
-              <div className="campeonatos-modal-actions">
+              <div className="campeonatos-modal-actions mt-auto bg-white/90 backdrop-blur-sm">
                 <button
                   type="button"
                   className="campeonatos-btn campeonatos-btn--ghost"
@@ -746,7 +773,9 @@ function UsuariosAdminPage() {
                 </button>
                 <button
                   type="submit"
-                  className={`campeonatos-btn campeonatos-btn--primary${salvando ? " campeonatos-btn--with-loader" : ""}`}
+                  className={`campeonatos-btn campeonatos-btn--primary${
+                    salvando ? " campeonatos-btn--with-loader" : ""
+                  }`}
                   disabled={salvando}
                   aria-busy={salvando}
                 >
