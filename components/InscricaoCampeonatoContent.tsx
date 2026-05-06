@@ -7,6 +7,7 @@ import { Check, Copy } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   buscarCampeonatoPorId,
+  buscarMeuPerfil,
   criarInscricaoIndividual,
   listarMinhasInscricoes
 } from "@/lib/api";
@@ -21,6 +22,7 @@ type ParticipanteLogado = {
   nome: string;
   email: string;
   contato?: string | null;
+  sexo?: string | null;
 } | null;
 
 const VALOR_INSCRICAO_EXIBICAO = "R$ 30,00";
@@ -190,6 +192,9 @@ export default function InscricaoCampeonatoContent({
 
   const [mensagem, setMensagem] = useState("");
   const [campeonato, setCampeonato] = useState<any | null>(null);
+  const [sexoPerfil, setSexoPerfil] = useState<string | null>(
+    participante?.sexo ? String(participante.sexo) : null
+  );
 
   const [tamanhoCamisa, setTamanhoCamisa] = useState("");
   const [arquivoComprovante, setArquivoComprovante] = useState<File | null>(null);
@@ -205,6 +210,30 @@ export default function InscricaoCampeonatoContent({
       router.replace("/login");
     }
   }, [router, tokenParticipante, variant]);
+
+  useEffect(() => {
+    if (!tokenParticipante) {
+      setSexoPerfil(null);
+      return;
+    }
+    if (participante?.sexo) {
+      setSexoPerfil(String(participante.sexo));
+      return;
+    }
+    let ativo = true;
+    (async () => {
+      try {
+        const perfil = (await buscarMeuPerfil(tokenParticipante)) as any;
+        if (!ativo) return;
+        setSexoPerfil(perfil?.sexo ? String(perfil.sexo) : null);
+      } catch {
+        if (ativo) setSexoPerfil(null);
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [tokenParticipante, participante?.sexo]);
 
   useEffect(() => {
     async function carregar() {
@@ -276,6 +305,11 @@ export default function InscricaoCampeonatoContent({
     if (!campeonato || !campeonatoId) return;
     if (!tokenParticipante) return;
 
+    if (String(sexoPerfil || "").toUpperCase() === "MASCULINO") {
+      setMensagem("Inscrições permitidas apenas para mulheres.");
+      return;
+    }
+
     if (jaInscritoNesteCampeonato) {
       setMensagem("Você já está inscrito neste campeonato.");
       return;
@@ -330,6 +364,7 @@ export default function InscricaoCampeonatoContent({
 
   const inscricoesAbertas = campeonato?.inscricoesAbertas;
   const modoIndividual = campeonato?.modoInscricao === "INDIVIDUAL";
+  const bloqueadoPorSexo = String(sexoPerfil || "").toUpperCase() === "MASCULINO";
 
   const idPayTitle = `${uid}-pay-title`;
   const idTamanhoCamisa = `${uid}-tamanhoCamisa`;
@@ -387,6 +422,10 @@ export default function InscricaoCampeonatoContent({
         <p className="mensagem">
           Este campeonato não está configurado para inscrição individual. Entre em contato com a
           organização ou use o fluxo de inscrição por equipe, se disponível.
+        </p>
+      ) : bloqueadoPorSexo ? (
+        <p className="mensagem" role="status">
+          Inscrições permitidas apenas para mulheres.
         </p>
       ) : jaInscritoNesteCampeonato ? (
         <p className="mensagem" role="status">
@@ -587,6 +626,7 @@ export default function InscricaoCampeonatoContent({
                 variant === "modal" && !podeEnviarNoModal ? "is-disabled" : ""
               }`}
               aria-disabled={variant === "modal" ? (!podeEnviarNoModal ? "true" : "false") : undefined}
+              disabled={bloqueadoPorSexo}
               onClick={() => {
                 if (variant === "modal" && !podeEnviarNoModal) {
                   setTentouEnviar(true);
@@ -594,7 +634,9 @@ export default function InscricaoCampeonatoContent({
                 }
               }}
               title={
-                variant === "modal" && !podeEnviarNoModal
+                bloqueadoPorSexo
+                  ? "Inscrições permitidas apenas para mulheres."
+                  : variant === "modal" && !podeEnviarNoModal
                   ? "Anexe o comprovante e concorde com as regras para continuar."
                   : undefined
               }
