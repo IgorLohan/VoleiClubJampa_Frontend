@@ -8,10 +8,12 @@ import {
   API_BASE,
   atualizarUsuarioAdmin,
   excluirUsuarioAdmin,
-  listarUsuariosAdmin
+  listarUsuariosAdmin,
+  listarUsuariosAdminSemInscricao
 } from "@/lib/api";
 import { chavesSessao, getJSONStorage, getStorage } from "@/lib/sessao";
 import { Loader2, Lock, Pencil, Trash2, UserRound } from "lucide-react";
+import * as XLSX from "xlsx";
 
 /** Senha de acesso à área de gestão de usuários (apenas no cliente). */
 const SENHA_AREA_USUARIOS = "505050";
@@ -54,6 +56,13 @@ function traduzirPapel(papel: string | null | undefined) {
   if (u === "ADMIN") return "Administrador";
   if (u === "PARTICIPANTE") return "Participante";
   return papel || "—";
+}
+
+function formatarDataExcel(data: string | null | undefined) {
+  if (!data) return "";
+  const d = new Date(data);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
 function classeBadgePapel(papel: string | null | undefined) {
@@ -126,6 +135,7 @@ function UsuariosAdminPage() {
   const [mensagem, setMensagem] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [exportandoSemInscricao, setExportandoSemInscricao] = useState(false);
   const [fotoModal, setFotoModal] = useState<{ src: string; nome: string } | null>(null);
   const [edicao, setEdicao] = useState<UsuarioAdmin | null>(null);
   const [form, setForm] = useState({
@@ -207,6 +217,42 @@ function UsuariosAdminPage() {
     () => usuarios.filter((u) => String(u.papel).toUpperCase() === "ADMIN").length,
     [usuarios]
   );
+
+  async function exportarExcelUsuariosSemInscricao() {
+    setExportandoSemInscricao(true);
+    setMensagem("");
+    try {
+      const lista = (await listarUsuariosAdminSemInscricao()) as UsuarioAdmin[];
+      const dados = (Array.isArray(lista) ? lista : []).map((u) => ({
+        ID: u.id,
+        Nome: u.nome || "",
+        Email: u.email || "",
+        Contato: u.contato || "",
+        Sexo: u.sexo || "",
+        "Data nascimento": formatarDataExcel(u.dataNascimento),
+        "E-mail verificado": u.emailVerificado ? "Sim" : "Não",
+        Papel: traduzirPapel(u.papel),
+        "Data cadastro": formatarDataExcel(u.criadoEm)
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sem inscrição");
+
+      const hoje = new Date();
+      const yyyy = hoje.getFullYear();
+      const mm = String(hoje.getMonth() + 1).padStart(2, "0");
+      const dd = String(hoje.getDate()).padStart(2, "0");
+      const nomeArquivo = `usuarios-sem-inscricao-${yyyy}-${mm}-${dd}.xlsx`;
+
+      XLSX.writeFile(wb, nomeArquivo, { compression: true });
+    } catch (err) {
+      const error = err as Error;
+      setMensagem(`Erro ao exportar Excel: ${error.message}`);
+    } finally {
+      setExportandoSemInscricao(false);
+    }
+  }
 
   const acoesBloqueadas = excluindoId !== null;
 
@@ -394,6 +440,19 @@ function UsuariosAdminPage() {
           <strong>Total:</strong> {usuarios.length} cadastro(s) · <strong>Administradores:</strong>{" "}
           {totalAdmins}
         </p>
+
+        <div className="acoes-card" style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            className="botao-pequeno secundario"
+            onClick={exportarExcelUsuariosSemInscricao}
+            disabled={exportandoSemInscricao || carregando}
+            aria-busy={exportandoSemInscricao}
+            title="Baixar Excel com participantes que não estão inscritos em nenhum campeonato"
+          >
+            {exportandoSemInscricao ? "Gerando Excel…" : "Excel: cadastrados sem inscrição"}
+          </button>
+        </div>
 
         {carregando && usuarios.length > 0 ? (
           <PageLoader label="Atualizando lista" variant="section" />

@@ -68,6 +68,12 @@ export async function listarUsuariosAdmin() {
   });
 }
 
+export async function listarUsuariosAdminSemInscricao() {
+  return fazerRequisicao("/admin/usuarios/sem-inscricao", {
+    method: "GET"
+  });
+}
+
 export type AtualizarUsuarioAdminPayload = {
   nome?: string;
   email?: string;
