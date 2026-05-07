@@ -10,10 +10,9 @@ import {
   atualizarInscricaoIndividual,
   buscarResumoCampeonato,
   criarInscricaoAdmin,
-  criarInscricaoIndividualAdmin,
+  criarInscricaoIndividual,
   excluirInscricaoIndividual,
   listarCampeonatosAdmin,
-  listarUsuariosAdmin,
   reprovarInscricaoIndividual
 } from "@/lib/api";
 import { chavesSessao, getStorage } from "@/lib/sessao";
@@ -82,6 +81,15 @@ function montarUrlFoto(fotoPerfil: string | null | undefined) {
   if (!fotoPerfil) return null;
   if (/^https?:\/\//i.test(fotoPerfil)) return fotoPerfil;
   return `${API_BASE}${fotoPerfil.startsWith("/") ? "" : "/"}${fotoPerfil}`;
+}
+
+function arquivoParaDataUrl(arquivo: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Não foi possível ler o arquivo."));
+    reader.readAsDataURL(arquivo);
+  });
 }
 
 function CelulaFotoPerfilInscricao({
@@ -156,15 +164,11 @@ function InscricoesAdminPage() {
     responsavel: "",
     contato: ""
   });
+  const [novoTamanhoCamisa, setNovoTamanhoCamisa] = useState("");
+  const [novoComprovante, setNovoComprovante] = useState<File | null>(null);
   const [novoJogadores, setNovoJogadores] = useState<Array<{ nome: string; genero: "M" | "F" }>>(
     []
   );
-  const [usuariosCadastro, setUsuariosCadastro] = useState<any[]>([]);
-  const [novoIndividual, setNovoIndividual] = useState({
-    usuarioId: "",
-    tamanhoCamisa: "M",
-    valorReais: "30.00"
-  });
 
   useEffect(() => {
     async function carregarCampeonatos() {
@@ -249,30 +253,11 @@ function InscricoesAdminPage() {
 
   useEffect(() => {
     if (!modalNovoAberto) return;
-    if (modoPorEquipe) {
-      setNovoJogadores((prev) => {
-        if (prev.length === tamanhoEquipe) return prev;
-        return Array.from(
-          { length: tamanhoEquipe },
-          (_, idx) => prev[idx] ?? { nome: "", genero: "M" }
-        );
-      });
-    }
-    if (modoIndividual && !usuariosCadastro.length) {
-      (async () => {
-        try {
-          const lista = (await listarUsuariosAdmin()) as any[];
-          const participantes = (Array.isArray(lista) ? lista : []).filter(
-            (u) => String(u?.papel || "").toUpperCase() === "PARTICIPANTE"
-          );
-          setUsuariosCadastro(participantes);
-        } catch (err) {
-          const error = err as Error;
-          setMensagem(`Erro ao carregar usuários: ${error.message}`);
-        }
-      })();
-    }
-  }, [modalNovoAberto, tamanhoEquipe, modoPorEquipe, modoIndividual, usuariosCadastro.length]);
+    setNovoJogadores((prev) => {
+      if (prev.length === tamanhoEquipe) return prev;
+      return Array.from({ length: tamanhoEquipe }, (_, idx) => prev[idx] ?? { nome: "", genero: "M" });
+    });
+  }, [modalNovoAberto, tamanhoEquipe]);
   const inscricoesPaginadas = useMemo(() => {
     const ini = pagina * linhasPorPagina;
     const fim = ini + linhasPorPagina;
@@ -493,20 +478,18 @@ function InscricoesAdminPage() {
           >
             <h2 style={{ margin: 0 }}>Inscrições</h2>
             <div style={{ display: "inline-flex", gap: 10, alignItems: "center" }}>
-              <button
+              {/* <button
                 type="button"
                 className="campeonatos-btn campeonatos-btn--icon"
                 onClick={() => setModalNovoAberto(true)}
                 disabled={!podeCriarManual}
                 title={
-                  podeCriarManual
-                    ? "Criar inscrição manualmente"
-                    : "Cadastro manual indisponível para este modo de inscrição."
+                  podeCriarManual ? "Criar inscrição manualmente" : "Modo de inscrição inválido."
                 }
                 aria-label="Nova inscrição manual"
               >
                 <Plus aria-hidden className="campeonatos-btn-icon" />
-              </button>
+              </button> */}
               <button
                 type="button"
                 className="campeonatos-btn campeonatos-btn--icon campeonatos-btn--success"
@@ -840,21 +823,34 @@ function InscricoesAdminPage() {
                 e.preventDefault();
                 if (!campeonatoId) return;
                 if (!podeCriarManual) {
-                  setMensagem("Cadastro manual indisponível para este modo de inscrição.");
+                  setMensagem("Modo de inscrição inválido para cadastro manual.");
                   return;
                 }
                 setAcaoEmAndamento("criar-manual");
                 setMensagem("");
                 try {
                   if (modoIndividual) {
-                    const valorReais = Number(String(novoIndividual.valorReais).replace(",", "."));
-                    await criarInscricaoIndividualAdmin(campeonatoId, {
-                      usuarioId: novoIndividual.usuarioId,
-                      tamanhoCamisa: novoIndividual.tamanhoCamisa,
-                      valorTotalCentavos: Number.isFinite(valorReais)
-                        ? Math.round(valorReais * 100)
-                        : undefined
-                    });
+                    const tokenParticipante = getStorage(chavesSessao.tokenParticipante);
+                    if (!tokenParticipante) {
+                      throw new Error(
+                        "Para criar inscrição individual sem alteração no backend, é necessário haver um participante logado neste navegador."
+                      );
+                    }
+                    if (!novoTamanhoCamisa) {
+                      throw new Error("Selecione o tamanho da camisa.");
+                    }
+                    if (!novoComprovante) {
+                      throw new Error("Envie o comprovante de pagamento.");
+                    }
+                    const comprovantePagamento = await arquivoParaDataUrl(novoComprovante);
+                    await criarInscricaoIndividual(
+                      campeonatoId,
+                      {
+                        tamanhoCamisa: novoTamanhoCamisa,
+                        comprovantePagamento
+                      },
+                      tokenParticipante
+                    );
                   } else {
                     await criarInscricaoAdmin(campeonatoId, {
                       nomeEquipe: novoPayload.nomeEquipe.trim(),
@@ -869,8 +865,9 @@ function InscricoesAdminPage() {
                   await recarregarResumoAtual();
                   setModalNovoAberto(false);
                   setNovoPayload({ nomeEquipe: "", responsavel: "", contato: "" });
+                  setNovoTamanhoCamisa("");
+                  setNovoComprovante(null);
                   setNovoJogadores([]);
-                  setNovoIndividual({ usuarioId: "", tamanhoCamisa: "M", valorReais: "30.00" });
                 } catch (err) {
                   const error = err as Error;
                   setMensagem(`Erro ao criar inscrição: ${error.message}`);
@@ -881,67 +878,48 @@ function InscricoesAdminPage() {
             >
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 <div className="campeonatos-modal-section">
+                  {modoIndividual && !getStorage(chavesSessao.tokenParticipante) ? (
+                    <p className="admin-dash-help" style={{ marginTop: 0 }}>
+                      Sem alterar o backend, a inscrição individual só pode ser criada para o
+                      participante logado neste navegador.
+                    </p>
+                  ) : null}
+
                   {modoIndividual ? (
-                    <>
-                      <div className="formulario" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                        <div className="grupo-formulario" style={{ gridColumn: "1 / -1" }}>
-                          <label>Participante cadastrado</label>
-                          <select
-                            value={novoIndividual.usuarioId}
-                            onChange={(e) =>
-                              setNovoIndividual((p) => ({ ...p, usuarioId: e.target.value }))
-                            }
-                            required
-                            disabled={acaoEmAndamento !== null}
-                          >
-                            <option value="">Selecione um participante</option>
-                            {usuariosCadastro.map((u) => (
-                              <option key={u.id} value={String(u.id)}>
-                                {u.nome} · {u.email}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="grupo-formulario">
-                          <label>Tamanho da camisa</label>
-                          <select
-                            value={novoIndividual.tamanhoCamisa}
-                            onChange={(e) =>
-                              setNovoIndividual((p) => ({
-                                ...p,
-                                tamanhoCamisa: e.target.value
-                              }))
-                            }
-                            required
-                            disabled={acaoEmAndamento !== null}
-                          >
-                            <option value="P">P</option>
-                            <option value="M">M</option>
-                            <option value="G">G</option>
-                            <option value="GG">GG</option>
-                            <option value="XG">XG</option>
-                            <option value="XGG">XGG</option>
-                          </select>
-                        </div>
-                        <div className="grupo-formulario">
-                          <label>Valor (R$)</label>
-                          <input
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={novoIndividual.valorReais}
-                            onChange={(e) =>
-                              setNovoIndividual((p) => ({ ...p, valorReais: e.target.value }))
-                            }
-                            required
-                            disabled={acaoEmAndamento !== null}
-                          />
-                        </div>
+                    <div className="formulario">
+                      <div className="grupo-formulario">
+                        <label>Tamanho da camisa</label>
+                        <select
+                          value={novoTamanhoCamisa}
+                          onChange={(e) => setNovoTamanhoCamisa(e.target.value)}
+                          required
+                          disabled={acaoEmAndamento !== null}
+                        >
+                          <option value="">Selecione</option>
+                          <option value="P">P</option>
+                          <option value="M">M</option>
+                          <option value="G">G</option>
+                          <option value="GG">GG</option>
+                          <option value="XG">XG</option>
+                          <option value="XGG">XGG</option>
+                        </select>
                       </div>
-                      <p className="info-auxiliar" style={{ marginTop: 10 }}>
-                        A inscrição criada manualmente pelo admin entra como <strong>aprovada</strong>.
-                      </p>
-                    </>
+                      <div className="grupo-formulario">
+                        <label>Comprovante de pagamento</label>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={(e) => setNovoComprovante(e.target.files?.[0] ?? null)}
+                          required
+                          disabled={acaoEmAndamento !== null}
+                        />
+                        {novoComprovante ? (
+                          <p className="info-auxiliar" style={{ marginTop: 6 }}>
+                            {novoComprovante.name}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
                   ) : (
                     <>
                       <div className="formulario" style={{ gridTemplateColumns: "1fr 1fr" }}>
@@ -954,7 +932,7 @@ function InscricoesAdminPage() {
                             }
                             placeholder="Ex.: Equipe 01"
                             required
-                            disabled={acaoEmAndamento !== null || !podeCriarManual}
+                            disabled={acaoEmAndamento !== null}
                           />
                         </div>
                         <div className="grupo-formulario">
@@ -966,7 +944,7 @@ function InscricoesAdminPage() {
                             }
                             placeholder="Nome do responsável"
                             required
-                            disabled={acaoEmAndamento !== null || !podeCriarManual}
+                            disabled={acaoEmAndamento !== null}
                           />
                         </div>
                         <div className="grupo-formulario">
@@ -977,7 +955,7 @@ function InscricoesAdminPage() {
                               setNovoPayload((p) => ({ ...p, contato: e.target.value }))
                             }
                             placeholder="Opcional"
-                            disabled={acaoEmAndamento !== null || !podeCriarManual}
+                            disabled={acaoEmAndamento !== null}
                           />
                         </div>
                       </div>
@@ -1005,7 +983,7 @@ function InscricoesAdminPage() {
                                 }
                                 placeholder="Nome"
                                 required
-                                disabled={acaoEmAndamento !== null || !podeCriarManual}
+                                disabled={acaoEmAndamento !== null}
                               />
                             </div>
                             <div className="grupo-formulario">
@@ -1021,7 +999,7 @@ function InscricoesAdminPage() {
                                     )
                                   )
                                 }
-                                disabled={acaoEmAndamento !== null || !podeCriarManual}
+                                disabled={acaoEmAndamento !== null}
                               >
                                 <option value="M">M</option>
                                 <option value="F">F</option>

@@ -294,20 +294,6 @@ export async function criarInscricaoIndividual(
   });
 }
 
-export async function criarInscricaoIndividualAdmin(
-  campeonatoId: string | number,
-  payload: {
-    usuarioId: string | number;
-    tamanhoCamisa: string;
-    valorTotalCentavos?: number;
-  }
-) {
-  return fazerRequisicao(`/campeonatos/${campeonatoId}/inscricoes-individuais/admin`, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
-}
-
 export async function registrarPlacar(jogoId: string | number, sets: any) {
   return fazerRequisicao(`/jogos/${jogoId}/placar`, {
     method: "PATCH",
