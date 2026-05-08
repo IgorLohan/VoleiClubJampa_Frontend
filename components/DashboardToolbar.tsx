@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  GitBranch,
   LayoutDashboard,
   LogOut,
   Shield,
@@ -48,7 +49,8 @@ export default function DashboardToolbar({
       minhasInscricoes: "/dashboard/minhas-inscricoes",
       admin: "/dashboard/admin",
       inscricoesAdmin: "/dashboard/inscricoes",
-      equipesAdmin: "/dashboard/equipes"
+      equipesAdmin: "/dashboard/equipes",
+      chaveamentoAdmin: "/dashboard/chaveamento"
     };
   }, []);
 
@@ -165,6 +167,18 @@ export default function DashboardToolbar({
                     <UsersRound size={18} />
                   </span>
                   <span className="dash-link-text">Equipes</span>
+                </Link>
+                <Link
+                  href={rotas.chaveamentoAdmin}
+                  className={`dash-link ${
+                    pathname.startsWith(rotas.chaveamentoAdmin) ? "is-active" : ""
+                  }`}
+                  onClick={onNavegar}
+                >
+                  <span className="dash-link-icon" aria-hidden>
+                    <GitBranch size={18} />
+                  </span>
+                  <span className="dash-link-text">Chaveamento</span>
                 </Link>
               </>
             ) : (

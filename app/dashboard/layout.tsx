@@ -65,6 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname.startsWith("/dashboard/campeonatos")) return "Campeonatos";
     if (pathname.startsWith("/dashboard/inscricoes")) return "Inscrições";
     if (pathname.startsWith("/dashboard/equipes")) return "Equipes";
+    if (pathname.startsWith("/dashboard/chaveamento")) return "Chaveamento";
     if (pathname.startsWith("/dashboard/minhas-inscricoes")) return "Minhas inscrições";
     if (pathname.startsWith("/dashboard/admin")) return "Campeonatos";
     return "Dashboard";
