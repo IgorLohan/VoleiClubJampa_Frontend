@@ -9,6 +9,7 @@ import {
   aprovarInscricaoIndividual,
   atualizarInscricaoIndividual,
   buscarResumoCampeonato,
+  confirmarCamisaRetiradaInscricao,
   criarInscricaoAdmin,
   criarInscricaoIndividual,
   excluirInscricaoIndividual,
@@ -25,6 +26,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Shirt,
   Trash2,
   UserRound
 } from "lucide-react";
@@ -359,6 +361,28 @@ function InscricoesAdminPage() {
     }
   }
 
+  async function onConfirmarCamisa(inscricao: any) {
+    if (!inscricao?.id) return;
+    if (inscricao.camisaRetirada) return;
+
+    const ok = window.confirm(
+      `Confirmar que ${inscricao.usuario?.nome || "o inscrito"} retirou a camisa?`
+    );
+    if (!ok) return;
+
+    setAcaoEmAndamento(`camisa-${inscricao.id}`);
+    setMensagem("");
+    try {
+      await confirmarCamisaRetiradaInscricao(inscricao.id, true);
+      await recarregarResumoAtual();
+    } catch (err) {
+      const error = err as Error;
+      setMensagem(`Erro ao confirmar camisa: ${error.message}`);
+    } finally {
+      setAcaoEmAndamento(null);
+    }
+  }
+
   async function onExcluir(inscricao: any) {
     if (!inscricao?.id) return;
     const ok = window.confirm(
@@ -418,7 +442,8 @@ function InscricoesAdminPage() {
       Contato: String(i.usuario?.contato?.trim?.() || "—"),
       Status: traduzirStatusAnalise(i.statusAnalise),
       "Inscrito em": textoInscritoEm(i),
-      Camisa: String(i.tamanhoCamisa || "—"),
+      Tamanho: String(i.tamanhoCamisa || "—"),
+      Camisa: i.camisaRetirada ? "Sim" : "Não",
       Valor: formatarDinheiroCentavos(i.valorTotalCentavos)
     }));
     const planilha = XLSX.utils.json_to_sheet(linhas);
@@ -617,6 +642,7 @@ function InscricoesAdminPage() {
                   <th>Contato</th>
                   <th>Status</th>
                   <th>Inscrito em</th>
+                  <th>Tamanho</th>
                   <th>Camisa</th>
                   <th>Valor</th>
                   <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Aprovação</th>
@@ -634,6 +660,8 @@ function InscricoesAdminPage() {
                     const urlFoto = montarUrlFoto(i.usuario?.fotoPerfil);
                     const nomeJogador = String(i.usuario?.nome || "Jogador");
                     const aprovandoEste = acaoEmAndamento === `aprovar-${i.id}`;
+                    const confirmandoCamisa = acaoEmAndamento === `camisa-${i.id}`;
+                    const camisaRetirada = Boolean(i.camisaRetirada);
 
                     return (
                       <tr key={`individual-${i.id}`}>
@@ -657,7 +685,18 @@ function InscricoesAdminPage() {
                           </span>
                         </td>
                         <td data-label="Inscrito em">{textoInscritoEm(i)}</td>
-                        <td data-label="Camisa">{i.tamanhoCamisa || "—"}</td>
+                        <td data-label="Tamanho">{i.tamanhoCamisa || "—"}</td>
+                        <td data-label="Camisa">
+                          <span
+                            className={
+                              camisaRetirada
+                                ? "minhas-inscricoes-badge minhas-inscricoes-badge--ok"
+                                : "minhas-inscricoes-badge minhas-inscricoes-badge--neutral"
+                            }
+                          >
+                            {camisaRetirada ? "Sim" : "Não"}
+                          </span>
+                        </td>
                         <td data-label="Valor">{formatarDinheiroCentavos(i.valorTotalCentavos)}</td>
                         <td
                           data-label="Aprovação"
@@ -738,6 +777,42 @@ function InscricoesAdminPage() {
                             )}
                             <button
                               type="button"
+                              className={`campeonatos-action campeonatos-action--icon${
+                                camisaRetirada ? " campeonatos-action--primary" : ""
+                              }`}
+                              onClick={() => onConfirmarCamisa(i)}
+                              disabled={
+                                acaoEmAndamento !== null || camisaRetirada || !aprovada
+                              }
+                              title={
+                                camisaRetirada
+                                  ? "Camisa já retirada"
+                                  : !aprovada
+                                    ? "Disponível após aprovação"
+                                    : confirmandoCamisa
+                                      ? "Confirmando…"
+                                      : "Confirmar retirada da camisa"
+                              }
+                              aria-label={
+                                camisaRetirada
+                                  ? "Camisa já retirada"
+                                  : confirmandoCamisa
+                                    ? "Confirmando retirada da camisa"
+                                    : "Confirmar retirada da camisa"
+                              }
+                              aria-busy={confirmandoCamisa}
+                            >
+                              {confirmandoCamisa ? (
+                                <Loader2
+                                  aria-hidden
+                                  className="campeonatos-action-icon campeonatos-acao-loader"
+                                />
+                              ) : (
+                                <Shirt aria-hidden className="campeonatos-action-icon" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
                               className="campeonatos-action campeonatos-action--icon"
                               onClick={() => abrirEdicao(i)}
                               disabled={acaoEmAndamento !== null}
@@ -763,7 +838,7 @@ function InscricoesAdminPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={10} className="campeonatos-empty">
+                    <td colSpan={11} className="campeonatos-empty">
                       Nenhuma inscrição individual encontrada.
                     </td>
                   </tr>

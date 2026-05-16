@@ -364,11 +364,26 @@ export async function reprovarInscricaoIndividual(
 
 export async function atualizarInscricaoIndividual(
   inscricaoId: string | number,
-  payload: { tamanhoCamisa?: string; valorTotalCentavos?: number; observacaoAdmin?: string }
+  payload: {
+    tamanhoCamisa?: string;
+    valorTotalCentavos?: number;
+    observacaoAdmin?: string;
+    camisaRetirada?: boolean;
+  }
 ) {
   return fazerRequisicao(`/campeonatos/inscricoes-individuais/${inscricaoId}`, {
     method: "PATCH",
     body: JSON.stringify(payload)
+  });
+}
+
+export async function confirmarCamisaRetiradaInscricao(
+  inscricaoId: string | number,
+  camisaRetirada = true
+) {
+  return fazerRequisicao(`/campeonatos/inscricoes-individuais/${inscricaoId}/camisa-retirada`, {
+    method: "PATCH",
+    body: JSON.stringify({ camisaRetirada })
   });
 }
 
