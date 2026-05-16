@@ -79,6 +79,24 @@ function formatarDinheiroCentavos(valor: number | null | undefined) {
   return (v / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function inscricaoCombinaPesquisa(inscricao: any, termo: string) {
+  const q = termo.trim().toLowerCase();
+  if (!q) return true;
+
+  const campos = [
+    inscricao?.usuario?.nome,
+    inscricao?.usuario?.email,
+    inscricao?.usuario?.contato,
+    traduzirStatusAnalise(inscricao?.statusAnalise),
+    inscricao?.tamanhoCamisa,
+    inscricao?.camisaRetirada ? "sim" : "não",
+    formatarDinheiroCentavos(inscricao?.valorTotalCentavos),
+    textoInscritoEm(inscricao)
+  ];
+
+  return campos.some((campo) => String(campo || "").toLowerCase().includes(q));
+}
+
 function montarUrlFoto(fotoPerfil: string | null | undefined) {
   if (!fotoPerfil) return null;
   if (/^https?:\/\//i.test(fotoPerfil)) return fotoPerfil;
@@ -160,6 +178,7 @@ function InscricoesAdminPage() {
   const [reprovarObservacao, setReprovarObservacao] = useState("");
   const [pagina, setPagina] = useState(0);
   const [linhasPorPagina, setLinhasPorPagina] = useState(10);
+  const [pesquisaTabela, setPesquisaTabela] = useState("");
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
   const [novoPayload, setNovoPayload] = useState({
     nomeEquipe: "",
@@ -202,6 +221,7 @@ function InscricoesAdminPage() {
         setResumo(dados);
         setMensagem("");
         setPagina(0);
+        setPesquisaTabela("");
       } catch (err) {
         const error = err as Error;
         setResumo(null);
@@ -243,6 +263,17 @@ function InscricoesAdminPage() {
   }, [reprovarAlvo]);
 
   const inscricoesIndividuais = useMemo(() => resumo?.inscricoesIndividuais || [], [resumo]);
+  const inscricoesFiltradas = useMemo(
+    () =>
+      (inscricoesIndividuais || []).filter((inscricao: any) =>
+        inscricaoCombinaPesquisa(inscricao, pesquisaTabela)
+      ),
+    [inscricoesIndividuais, pesquisaTabela]
+  );
+
+  useEffect(() => {
+    setPagina(0);
+  }, [pesquisaTabela]);
   const modoInscricao = String(resumo?.campeonato?.modoInscricao || "").toUpperCase();
   const modoIndividual = modoInscricao === "INDIVIDUAL";
   const modoPorEquipe = modoInscricao === "POR_EQUIPE";
@@ -263,8 +294,8 @@ function InscricoesAdminPage() {
   const inscricoesPaginadas = useMemo(() => {
     const ini = pagina * linhasPorPagina;
     const fim = ini + linhasPorPagina;
-    return (inscricoesIndividuais || []).slice(ini, fim);
-  }, [inscricoesIndividuais, pagina, linhasPorPagina]);
+    return inscricoesFiltradas.slice(ini, fim);
+  }, [inscricoesFiltradas, pagina, linhasPorPagina]);
   const inscritosAprovados = useMemo(
     () =>
       (inscricoesIndividuais || []).filter(
@@ -434,9 +465,10 @@ function InscricoesAdminPage() {
     acaoEmAndamento === `editar-${inscricaoEmEdicao.id}`;
 
   async function exportarInscricoesExcel() {
-    if (!inscricoesIndividuais.length) return;
+    const listaExportar = pesquisaTabela.trim() ? inscricoesFiltradas : inscricoesIndividuais;
+    if (!listaExportar.length) return;
     const XLSX = await import("xlsx");
-    const linhas = inscricoesIndividuais.map((i: any) => ({
+    const linhas = listaExportar.map((i: any) => ({
       Jogador: String(i.usuario?.nome || "—"),
       "E-mail": String(i.usuario?.email || "—"),
       Contato: String(i.usuario?.contato?.trim?.() || "—"),
@@ -519,14 +551,16 @@ function InscricoesAdminPage() {
                 type="button"
                 className="campeonatos-btn campeonatos-btn--icon campeonatos-btn--success"
                 onClick={() => void exportarInscricoesExcel()}
-                disabled={!inscricoesIndividuais.length}
+                disabled={
+                  !(pesquisaTabela.trim() ? inscricoesFiltradas : inscricoesIndividuais).length
+                }
                 title={
-                  inscricoesIndividuais.length
+                  (pesquisaTabela.trim() ? inscricoesFiltradas : inscricoesIndividuais).length
                     ? "Exportar Excel"
                     : "Não há inscrições para exportar"
                 }
                 aria-label={
-                  inscricoesIndividuais.length
+                  (pesquisaTabela.trim() ? inscricoesFiltradas : inscricoesIndividuais).length
                     ? "Exportar inscrições para Excel"
                     : "Exportar Excel (desabilitado: sem inscrições)"
                 }
@@ -632,7 +666,54 @@ function InscricoesAdminPage() {
             </div>
           </div>
 
-          <div className="campeonatos-table-wrap" style={{ marginTop: 14 }}>
+          <div
+            style={{
+              marginTop: 14,
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              gap: 10
+            }}
+          >
+            <label
+              htmlFor="admin-inscricoes-pesquisa"
+              style={{ flex: "1 1 260px", maxWidth: 440, width: "100%" }}
+            >
+              <span className="admin-dash-label">Pesquisar</span>
+              <span style={{ position: "relative", display: "block", marginTop: 6 }}>
+                <Search
+                  aria-hidden
+                  size={18}
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "rgba(11, 18, 32, 0.45)",
+                    pointerEvents: "none"
+                  }}
+                />
+                <input
+                  id="admin-inscricoes-pesquisa"
+                  type="search"
+                  className="admin-dash-select-control"
+                  value={pesquisaTabela}
+                  onChange={(e) => setPesquisaTabela(e.target.value)}
+                  placeholder="Nome, e-mail, contato, status, tamanho…"
+                  autoComplete="off"
+                  style={{ paddingLeft: 40 }}
+                />
+              </span>
+            </label>
+            {pesquisaTabela.trim() ? (
+              <p className="admin-dash-help" style={{ margin: 0, fontWeight: 700 }}>
+                {inscricoesFiltradas.length} de {inscricoesIndividuais.length} inscrição(ões)
+              </p>
+            ) : null}
+          </div>
+
+          <div className="campeonatos-table-wrap" style={{ marginTop: 10 }}>
             <table className="campeonatos-table" aria-label="Inscrições individuais">
               <thead>
                 <tr>
@@ -650,7 +731,7 @@ function InscricoesAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {inscricoesIndividuais.length ? (
+                {inscricoesFiltradas.length ? (
                   inscricoesPaginadas.map((i: any) => {
                     const aprovada = String(i?.statusAnalise || "").toUpperCase() === "APROVADA";
                     const reprovada = String(i?.statusAnalise || "").toUpperCase() === "REPROVADA";
@@ -839,14 +920,16 @@ function InscricoesAdminPage() {
                 ) : (
                   <tr>
                     <td colSpan={11} className="campeonatos-empty">
-                      Nenhuma inscrição individual encontrada.
+                      {inscricoesIndividuais.length && pesquisaTabela.trim()
+                        ? "Nenhuma inscrição encontrada para esta pesquisa."
+                        : "Nenhuma inscrição individual encontrada."}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
             <TablePagination
-              total={inscricoesIndividuais.length}
+              total={inscricoesFiltradas.length}
               page={pagina}
               rowsPerPage={linhasPorPagina}
               onPageChange={setPagina}
