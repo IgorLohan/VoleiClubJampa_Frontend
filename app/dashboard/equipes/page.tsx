@@ -12,7 +12,7 @@ import {
   montarEquipeComInscricoesIndividuais
 } from "@/lib/api";
 import { chavesSessao, getStorage } from "@/lib/sessao";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 export default function DashboardEquipesRoutePage() {
   const tokenAdmin = getStorage(chavesSessao.tokenAdmin);
@@ -75,6 +75,21 @@ function inscricaoDisponivelParaMontagem(i: any) {
   );
 }
 
+function inscricaoMontagemCombinaPesquisa(inscricao: any, termo: string) {
+  const q = termo.trim().toLowerCase();
+  if (!q) return true;
+
+  const campos = [
+    inscricao?.usuario?.nome,
+    inscricao?.usuario?.email,
+    inscricao?.usuario?.contato,
+    inscricao?.tamanhoCamisa,
+    inscricao?.usuario?.sexo
+  ];
+
+  return campos.some((campo) => String(campo || "").toLowerCase().includes(q));
+}
+
 type JogadorForm = { nome: string; genero: "M" | "F" };
 
 function EquipesAdminPage() {
@@ -104,6 +119,7 @@ function EquipesAdminPage() {
     contato: "",
     selecionadas: []
   });
+  const [pesquisaJogadoresEquipe, setPesquisaJogadoresEquipe] = useState("");
 
   const [modalEditarAberto, setModalEditarAberto] = useState(false);
   const [msgModalEditar, setMsgModalEditar] = useState("");
@@ -185,6 +201,14 @@ function EquipesAdminPage() {
     return lista.filter(inscricaoDisponivelParaMontagem);
   }, [resumo]);
 
+  const inscricoesMontagemFiltradas = useMemo(
+    () =>
+      inscricoesMontagem.filter((inscricao) =>
+        inscricaoMontagemCombinaPesquisa(inscricao, pesquisaJogadoresEquipe)
+      ),
+    [inscricoesMontagem, pesquisaJogadoresEquipe]
+  );
+
   function abrirModalCriar() {
     if (!campeonato || !campeonatoId) return;
     const n = limiteMembrosTipo(campeonato.tipoParticipante);
@@ -200,6 +224,7 @@ function EquipesAdminPage() {
       contato: "",
       selecionadas: []
     });
+    setPesquisaJogadoresEquipe("");
     setMsgModal("");
     setModalCriarAberto(true);
   }
@@ -207,6 +232,7 @@ function EquipesAdminPage() {
   function fecharModalCriar() {
     if (salvandoCriar) return;
     setModalCriarAberto(false);
+    setPesquisaJogadoresEquipe("");
     setMsgModal("");
   }
 
@@ -708,8 +734,52 @@ function EquipesAdminPage() {
                       inscrições ou aguarde cancelamentos.
                     </p>
                   ) : (
-                    <ul className="lista-simples" style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                      {inscricoesMontagem.map((i: any) => {
+                    <>
+                      <label
+                        htmlFor="eq-ind-pesquisa"
+                        className="admin-dash-label"
+                        style={{ display: "block", marginTop: 10 }}
+                      >
+                        Pesquisar jogador
+                      </label>
+                      <span style={{ position: "relative", display: "block", marginTop: 6 }}>
+                        <Search
+                          aria-hidden
+                          size={18}
+                          style={{
+                            position: "absolute",
+                            left: 12,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "rgba(11, 18, 32, 0.45)",
+                            pointerEvents: "none"
+                          }}
+                        />
+                        <input
+                          id="eq-ind-pesquisa"
+                          type="search"
+                          className="admin-dash-select-control"
+                          value={pesquisaJogadoresEquipe}
+                          onChange={(e) => setPesquisaJogadoresEquipe(e.target.value)}
+                          placeholder="Nome, e-mail, contato, camisa…"
+                          autoComplete="off"
+                          disabled={salvandoCriar}
+                          style={{ paddingLeft: 40 }}
+                        />
+                      </span>
+                      {pesquisaJogadoresEquipe.trim() ? (
+                        <p className="admin-dash-help" style={{ margin: "8px 0 0" }}>
+                          {inscricoesMontagemFiltradas.length} de {inscricoesMontagem.length}{" "}
+                          jogador(es)
+                        </p>
+                      ) : null}
+                      {!inscricoesMontagemFiltradas.length ? (
+                        <p className="campeonatos-msg" style={{ marginTop: 10 }}>
+                          Nenhum jogador encontrado para esta pesquisa.
+                        </p>
+                      ) : (
+                    <ul className="lista-simples" style={{ listStyle: "none", padding: 0, margin: "10px 0 0" }}>
+                      {inscricoesMontagemFiltradas.map((i: any) => {
                         const checked = formMontarIndividual.selecionadas.includes(i.id);
                         const bloqueado =
                           !checked &&
@@ -743,6 +813,8 @@ function EquipesAdminPage() {
                         );
                       })}
                     </ul>
+                      )}
+                    </>
                   )}
 
                   <div className="campeonatos-modal-actions">

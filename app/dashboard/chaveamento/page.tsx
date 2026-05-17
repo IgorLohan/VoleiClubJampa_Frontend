@@ -189,7 +189,7 @@ function GrupoChaveamentoCard({
   participantesPorId: Map<number, ParticipanteResumo>;
 }) {
   return (
-    <div className="min-w-[180px] rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:min-w-[220px]">
+    <div className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:min-w-[220px]">
       <div className="-mx-2 -mt-2 mb-2 rounded-t-2xl bg-slate-50 px-3 py-1 text-center text-sm font-black uppercase tracking-wide text-slate-800">
         Grupo {grupo}
       </div>
@@ -262,7 +262,7 @@ function JogoChaveamentoCard({
 
   return (
     <div
-      className={`relative min-w-[160px] rounded-2xl border p-2 shadow-sm sm:min-w-[190px] ${
+      className={`relative w-full min-w-0 rounded-2xl border p-2 shadow-sm sm:min-w-[190px] ${
         isBracket ? "border-slate-200 bg-white" : "border-slate-200 bg-white"
       }`}
     >
@@ -469,7 +469,7 @@ function MataMataBracketNeutro({
   const t1 = terceiroLugar[0] || null;
 
   return (
-    <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="mt-5 max-w-full overflow-x-auto rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-6">
       <div className="mb-4 flex flex-col gap-1 text-center">
         <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
           Fase final
@@ -659,8 +659,8 @@ function ChaveamentoModeloVisual({
     terceiroLugar.length;
 
   return (
-    <div className="mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="p-4 sm:p-6">
+    <div className="chaveamento-visual-wrap mt-4 max-w-full overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="p-3 sm:p-6">
         <div className="text-center">
           <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
             Classificam-se os melhores colocados
@@ -685,8 +685,8 @@ function ChaveamentoModeloVisual({
 
         <div className="mt-7">
           {temMataMata ? (
-            <div className="overflow-x-auto pb-3">
-              <div className="min-w-max px-1">
+            <div className="w-full max-w-full overflow-x-auto pb-3">
+              <div className="w-full max-w-full px-1 sm:w-max sm:min-w-max">
                 {(quartas.length || semifinais.length || final.length || terceiroLugar.length) ? (
                   <MataMataBracketNeutro
                     quartas={quartas}
@@ -698,23 +698,78 @@ function ChaveamentoModeloVisual({
                 ) : null}
 
                 {(primeiraFase.length || repescagem.length || oitavas.length) ? (
-                  <div className="mt-5 flex min-w-max items-start justify-center gap-4 sm:gap-5">
-                    <ColunaFaseChaveamento
-                      titulo="Primeira fase"
-                      jogos={primeiraFase}
-                      participantesPorId={participantesPorId}
-                    />
-                    <ColunaFaseChaveamento
-                      titulo="Repescagem"
-                      jogos={repescagem}
-                      participantesPorId={participantesPorId}
-                    />
-                    <ColunaFaseChaveamento
-                      titulo="Oitavas"
-                      jogos={oitavas}
-                      participantesPorId={participantesPorId}
-                    />
-                  </div>
+                  <>
+                    <div className="mt-5 grid gap-3 sm:hidden">
+                      {primeiraFase.length ? (
+                        <details className="rounded-2xl border border-slate-200 bg-white p-3" open>
+                          <summary className="cursor-pointer text-sm font-black text-slate-900">
+                            Primeira fase ({primeiraFase.length})
+                          </summary>
+                          <div className="mt-3 grid gap-3">
+                            {primeiraFase.map((j) => (
+                              <JogoChaveamentoCard
+                                key={j.id}
+                                jogo={j}
+                                titulo="Primeira fase"
+                                participantesPorId={participantesPorId}
+                              />
+                            ))}
+                          </div>
+                        </details>
+                      ) : null}
+                      {repescagem.length ? (
+                        <details className="rounded-2xl border border-slate-200 bg-white p-3" open>
+                          <summary className="cursor-pointer text-sm font-black text-slate-900">
+                            Repescagem ({repescagem.length})
+                          </summary>
+                          <div className="mt-3 grid gap-3">
+                            {repescagem.map((j) => (
+                              <JogoChaveamentoCard
+                                key={j.id}
+                                jogo={j}
+                                titulo="Repescagem"
+                                participantesPorId={participantesPorId}
+                              />
+                            ))}
+                          </div>
+                        </details>
+                      ) : null}
+                      {oitavas.length ? (
+                        <details className="rounded-2xl border border-slate-200 bg-white p-3" open>
+                          <summary className="cursor-pointer text-sm font-black text-slate-900">
+                            Oitavas ({oitavas.length})
+                          </summary>
+                          <div className="mt-3 grid gap-3">
+                            {oitavas.map((j) => (
+                              <JogoChaveamentoCard
+                                key={j.id}
+                                jogo={j}
+                                titulo="Oitavas"
+                                participantesPorId={participantesPorId}
+                              />
+                            ))}
+                          </div>
+                        </details>
+                      ) : null}
+                    </div>
+                    <div className="mt-5 hidden min-w-max items-start justify-center gap-4 sm:flex sm:gap-5">
+                      <ColunaFaseChaveamento
+                        titulo="Primeira fase"
+                        jogos={primeiraFase}
+                        participantesPorId={participantesPorId}
+                      />
+                      <ColunaFaseChaveamento
+                        titulo="Repescagem"
+                        jogos={repescagem}
+                        participantesPorId={participantesPorId}
+                      />
+                      <ColunaFaseChaveamento
+                        titulo="Oitavas"
+                        jogos={oitavas}
+                        participantesPorId={participantesPorId}
+                      />
+                    </div>
+                  </>
                 ) : null}
               </div>
             </div>
@@ -930,9 +985,9 @@ function ChaveamentoAdminPage() {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="chaveamento-admin-page grid w-full min-w-0 max-w-full gap-3 sm:gap-4">
       <section className="overflow-hidden rounded-[28px] border border-[#203667]/10 bg-gradient-to-br from-[#203667] via-[#28457d] to-[#f39200] p-[1px] shadow-[0_24px_70px_rgba(32,54,103,0.18)]">
-        <div className="rounded-[27px] bg-white/95 p-4 sm:p-6">
+        <div className="rounded-[27px] bg-white/95 p-3 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full bg-[#203667]/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#203667]">
@@ -942,7 +997,7 @@ function ChaveamentoAdminPage() {
               <h1 className="mt-3 text-2xl font-black leading-tight text-[#203667] sm:text-3xl">
                 Organize a fase de jogos
               </h1>
-              <p className="mt-2 max-w-2xl text-sm font-bold text-slate-600 sm:text-base">
+              <p className="mt-2 max-w-2xl break-words text-sm font-bold text-slate-600 sm:text-base">
                 Selecione um campeonato, encerre inscrições quando estiver pronto e gere os
                 confrontos seguindo as validações do backend.
               </p>
@@ -974,17 +1029,17 @@ function ChaveamentoAdminPage() {
         </div>
       </section>
 
-      <section className="card">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="m-0 text-xl font-black text-[#203667]">Painel do chaveamento</h2>
-            <p className="info-auxiliar" style={{ marginTop: 6 }}>
+      <section className="card min-w-0">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <h2 className="m-0 break-words text-xl font-black text-[#203667]">Painel do chaveamento</h2>
+            <p className="info-auxiliar break-words" style={{ marginTop: 6 }}>
               Status do campeonato, regras de geração e ações disponíveis.
             </p>
           </div>
           <button
             type="button"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 sm:w-auto"
             onClick={() => carregarResumo(campeonatoId)}
             disabled={!campeonatoId || acao !== null}
             aria-label="Atualizar chaveamento"
@@ -1011,19 +1066,19 @@ function ChaveamentoAdminPage() {
 
         {resumo ? (
           <>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-extrabold text-slate-600">Formato</div>
+            <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="min-w-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-extrabold text-slate-600 sm:text-sm">Formato</div>
                   <ListChecks className="h-5 w-5 text-[#f39200]" aria-hidden />
                 </div>
                 <div className="mt-1 text-lg font-black text-slate-900">
                   {traduzirFormato(campeonato?.formato)}
                 </div>
               </div>
-              <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-extrabold text-slate-600">Inscrição</div>
+              <div className="min-w-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-extrabold text-slate-600 sm:text-sm">Inscrição</div>
                   {inscricoesAbertas ? (
                     <Unlock className="h-5 w-5 text-emerald-600" aria-hidden />
                   ) : (
@@ -1063,10 +1118,10 @@ function ChaveamentoAdminPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-3">
               <button
                 type="button"
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 sm:px-4 sm:text-sm"
                 onClick={() => executarAcao("encerrar")}
                 disabled={!podeEncerrar || acao !== null}
                 title={podeEncerrar ? "Encerrar inscrições" : "As inscrições já estão encerradas."}
@@ -1080,7 +1135,7 @@ function ChaveamentoAdminPage() {
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 sm:px-4 sm:text-sm"
                 onClick={() => executarAcao("reabrir")}
                 disabled={!podeReabrir || acao !== null}
                 title={podeReabrir ? "Reabrir inscrições" : "Só é possível reabrir antes de gerar jogos."}
@@ -1094,7 +1149,7 @@ function ChaveamentoAdminPage() {
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f39200] to-[#e44631] px-4 text-sm font-black text-white shadow-[0_16px_38px_rgba(243,146,0,0.28)] transition hover:brightness-105 disabled:opacity-50"
+                className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f39200] to-[#e44631] px-3 text-xs font-black text-white shadow-[0_16px_38px_rgba(243,146,0,0.28)] transition hover:brightness-105 disabled:opacity-50 sm:px-4 sm:text-sm"
                 onClick={() => executarAcao("gerar")}
                 disabled={!podeGerar || acao !== null}
                 title={podeGerar ? "Gerar chaveamento" : avisoGeracao || "Não é possível gerar agora."}
@@ -1111,7 +1166,7 @@ function ChaveamentoAdminPage() {
             {avisoGeracao ? (
               <div className="mt-4 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
-                <span>{avisoGeracao}</span>
+                <span className="min-w-0 break-words">{avisoGeracao}</span>
               </div>
             ) : null}
           </>
@@ -1119,15 +1174,15 @@ function ChaveamentoAdminPage() {
       </section>
 
       {resumo ? (
-        <section className="card">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="m-0 text-xl font-black text-[#203667]">Chaveamento visual</h2>
-              <p className="info-auxiliar" style={{ marginTop: 6 }}>
+        <section className="card min-w-0">
+          <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="m-0 break-words text-xl font-black text-[#203667]">Chaveamento visual</h2>
+              <p className="info-auxiliar break-words" style={{ marginTop: 6 }}>
                 Exibição no modelo de grupos e mata-mata.
               </p>
             </div>
-            <span className="rounded-full bg-[#203667]/10 px-3 py-1 text-xs font-black text-[#203667]">
+            <span className="shrink-0 rounded-full bg-[#203667]/10 px-3 py-1 text-xs font-black text-[#203667]">
               {jogos.length} jogo(s)
             </span>
           </div>
