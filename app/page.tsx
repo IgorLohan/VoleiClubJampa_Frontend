@@ -68,6 +68,7 @@ export default function Home() {
         brandName="Vôlei Club Jampa"
         links={[
           { label: "Sobre nós", href: "#sobre-nos-titulo", icon: <Info /> },
+          { label: "Torneios", href: "/torneio" },
           { label: "Redes sociais", href: "#redes-titulo", icon: <Share2 /> },
           { label: "Login", href: "/login", variant: "cta", icon: <CircleUser /> }
         ]}
