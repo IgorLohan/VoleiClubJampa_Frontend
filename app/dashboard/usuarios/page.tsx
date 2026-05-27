@@ -13,7 +13,7 @@ import {
   listarUsuariosAdminSemInscricao
 } from "@/lib/api";
 import { chavesSessao, getJSONStorage, getStorage } from "@/lib/sessao";
-import { Loader2, Lock, Pencil, Trash2, UserRound } from "lucide-react";
+import { FileSpreadsheet, Loader2, Lock, Pencil, Trash2, UserRound } from "lucide-react";
 import * as XLSX from "xlsx";
 
 /** Senha de acesso à área de gestão de usuários (apenas no cliente). */
@@ -137,6 +137,7 @@ function UsuariosAdminPage() {
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
   const [exportandoSemInscricao, setExportandoSemInscricao] = useState(false);
+  const [exportandoTodos, setExportandoTodos] = useState(false);
   const [pagina, setPagina] = useState(0);
   const [linhasPorPagina, setLinhasPorPagina] = useState(10);
   const [fotoModal, setFotoModal] = useState<{ src: string; nome: string } | null>(null);
@@ -261,6 +262,42 @@ function UsuariosAdminPage() {
       setMensagem(`Erro ao exportar Excel: ${error.message}`);
     } finally {
       setExportandoSemInscricao(false);
+    }
+  }
+
+  async function exportarExcelUsuariosTodos() {
+    setExportandoTodos(true);
+    setMensagem("");
+    try {
+      const dados = (Array.isArray(usuarios) ? usuarios : []).map((u) => ({
+        ID: u.id,
+        Nome: u.nome || "",
+        Email: u.email || "",
+        "Login admin": u.loginAdmin || "",
+        Contato: u.contato || "",
+        Sexo: u.sexo || "",
+        "Data nascimento": formatarDataExcel(u.dataNascimento),
+        "E-mail verificado": u.emailVerificado ? "Sim" : "Não",
+        Papel: traduzirPapel(u.papel),
+        "Data cadastro": formatarDataExcel(u.criadoEm)
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Usuários");
+
+      const hoje = new Date();
+      const yyyy = hoje.getFullYear();
+      const mm = String(hoje.getMonth() + 1).padStart(2, "0");
+      const dd = String(hoje.getDate()).padStart(2, "0");
+      const nomeArquivo = `usuarios-${yyyy}-${mm}-${dd}.xlsx`;
+
+      XLSX.writeFile(wb, nomeArquivo, { compression: true });
+    } catch (err) {
+      const error = err as Error;
+      setMensagem(`Erro ao exportar Excel: ${error.message}`);
+    } finally {
+      setExportandoTodos(false);
     }
   }
 
@@ -461,6 +498,18 @@ function UsuariosAdminPage() {
             title="Baixar Excel com participantes que não estão inscritos em nenhum campeonato"
           >
             {exportandoSemInscricao ? "Gerando Excel…" : "Excel: cadastrados sem inscrição"}
+          </button>
+          <button
+            type="button"
+            className="botao-pequeno secundario"
+            onClick={exportarExcelUsuariosTodos}
+            disabled={exportandoTodos || carregando || !usuarios.length}
+            aria-busy={exportandoTodos}
+            title="Baixar Excel com todos os usuários carregados na lista"
+            style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+          >
+            <FileSpreadsheet aria-hidden size={16} />
+            {exportandoTodos ? "Gerando Excel…" : "Excel: todos usuários"}
           </button>
         </div>
 
