@@ -48,15 +48,13 @@ const pelada: PeladaInfo = {
 };
 
 const images: CarouselImage[] = [
-  {
-    src: "/branding/Campeonato.jpeg",
-    alt: "Inscrições abertas — Quarteto Misto — Vôlei Clube Jampa",
-    ctaHref: "/login",
-    ctaLabel: "Faça aqui sua inscrição"
-  },
-  { src: "/branding/carrossel_1.jpeg", alt: "Pelada Vôlei Club Jampa — foto 1" },
-  { src: "/branding/carrossel_2.jpeg", alt: "Pelada Vôlei Club Jampa — foto 2" },
-  { src: "/branding/carrossel_3.jpeg", alt: "Pelada Vôlei Club Jampa — foto 3" }
+  { src: "/branding/carrossel_1.jpg", alt: "Pelada Vôlei Club Jampa — foto 1" },
+  { src: "/branding/carrossel_2.jpg", alt: "Pelada Vôlei Club Jampa — foto 2" },
+  { src: "/branding/carrossel_3.jpeg", alt: "Pelada Vôlei Club Jampa — foto 3" },
+  { src: "/branding/carrossel_4.JPG", alt: "Pelada Vôlei Club Jampa — foto 4" },
+  { src: "/branding/carrossel_5.jpeg", alt: "Pelada Vôlei Club Jampa — foto 5" },
+  { src: "/branding/carrossel_6.jpg", alt: "Pelada Vôlei Club Jampa — foto 6" },
+  { src: "/branding/carrossel_7.jpeg", alt: "Pelada Vôlei Club Jampa — foto 7" }
 ];
 
 export default function Home() {
