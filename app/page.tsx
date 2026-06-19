@@ -1,4 +1,5 @@
 import type { CarouselImage } from "@/components/Carousel";
+import CamisaAvulsaPopup from "@/components/CamisaAvulsaPopup";
 import HomeBody, { type Patrocinador, type RedeSocial, type PeladaInfo } from "@/components/HomeBody";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -60,6 +61,7 @@ const images: CarouselImage[] = [
 export default function Home() {
   return (
     <>
+      <CamisaAvulsaPopup />
       <SiteHeader
         logoSrc={LOGO_VOLEI_CLUB_JAMPA}
         logoAlt="Vôlei Club Jampa"

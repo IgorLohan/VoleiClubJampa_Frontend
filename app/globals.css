@@ -5782,3 +5782,117 @@ a.home-sponsors-card--orbit:focus-visible {
   }
 }
 
+.camisa-avulsa-popup-backdrop {
+  z-index: 60;
+}
+
+.camisa-avulsa-popup {
+  width: min(480px, calc(100vw - 32px));
+  padding: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+.camisa-avulsa-popup-banner-wrap {
+  position: relative;
+  line-height: 0;
+}
+
+.camisa-avulsa-popup-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(650px, 100vh);
+}
+
+.camisa-avulsa-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.camisa-avulsa-popup-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px 20px 20px;
+}
+
+.camisa-avulsa-popup-texto p {
+  margin: 0;
+  line-height: 1.55;
+  color: rgba(11, 18, 32, 0.78);
+}
+
+.camisa-avulsa-popup-acoes {
+  margin-top: 4px;
+  justify-content: stretch;
+}
+
+.camisa-avulsa-popup-acoes .camisa-avulsa-popup-cta,
+.camisa-avulsa-popup-acoes .camisa-avulsa-popup-modelo {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+}
+
+.camisa-avulsa-popup-modelo.is-active {
+  box-shadow: 0 0 0 2px var(--brand-navy);
+}
+
+.camisa-avulsa-popup-dica {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(11, 18, 32, 0.55);
+  text-align: center;
+}
+
+.camisa-avulsa-popup-tamanhos {
+  display: grid;
+  gap: 10px;
+}
+
+.camisa-avulsa-popup-tamanhos-label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(11, 18, 32, 0.55);
+  text-align: center;
+}
+
+.camisa-avulsa-popup-tamanhos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.camisa-avulsa-popup-tamanho {
+  min-width: 52px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(32, 54, 103, 0.18);
+  background: #fff;
+  color: var(--brand-navy);
+  font-weight: 900;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.camisa-avulsa-popup-tamanho:hover {
+  border-color: var(--brand-orange);
+  background: rgba(243, 146, 0, 0.08);
+}
+
+.camisa-avulsa-popup-tamanho:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 2px;
+}
+
+.camisa-avulsa-popup-cta {
+  text-decoration: none;
+}
+
